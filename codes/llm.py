@@ -4,13 +4,17 @@ from dotenv import load_dotenv
 import os
 from langchain.tools import tool
 
+load_dotenv()
+
+os.environ['GROQ_API_KEY'] = os.getenv("GROQ_API_KEY")
+
 llm = ChatGroq(
     model="gemma2-9b-it",
     temperature=0,
     max_tokens=None,
     timeout=None,
     max_retries=2,
-    api_key="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",
+    api_key = os.getenv("GROQ_API_KEY"),
     
 )
 # Define a prompt template

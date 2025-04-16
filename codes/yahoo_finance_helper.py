@@ -1,11 +1,11 @@
-from langchain.agents import AgentType, initialize_agent , create_tool_calling_agent
+from langchain.agents import AgentType, initialize_agent
 from langchain_community.tools.yahoo_finance_news import YahooFinanceNewsTool
 from llm import llm
 from langchain.tools import tool
 yfinacen_tools = [YahooFinanceNewsTool()]
 
 
-agent_chain = create_tool_calling_agent(
+agent_chain = initialize_agent(
     yfinacen_tools,
     llm,
     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
