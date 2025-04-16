@@ -1,3 +1,4 @@
 hackathon-env/
 __pycache__/
 stockai/
+.env

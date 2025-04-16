@@ -1,4 +1,5 @@
-fastapi
+flask
+flask_compress
 uvicorn
 requests
 pydantic
