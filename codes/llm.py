@@ -1,20 +1,22 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 import os
+from langchain.tools import tool
 
+load_dotenv()
 
+os.environ['GROQ_API_KEY'] = os.getenv("GROQ_API_KEY")
 
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash-001",
+llm = ChatGroq(
+    model="gemma2-9b-it",
     temperature=0,
     max_tokens=None,
     timeout=None,
     max_retries=2,
-    api_key="AIzaSyBmN3fhXAINw0BDubja2qBMB3DT0nUENxw",
-    # other params...
+    api_key = os.getenv("GROQ_API_KEY"),
+    
 )
-
 # Define a prompt template
 prompt_template = ChatPromptTemplate.from_messages(
     [
@@ -25,7 +27,9 @@ prompt_template = ChatPromptTemplate.from_messages(
 # Create a chain with the prompt template
 chain = prompt_template | llm
 # Define a function to use the chain
-def ask_gemini(query):
+
+@tool
+def ask_groq(query):
     """
     Ask the Gemini agent a question and get the response.
     """

@@ -1,11 +1,12 @@
 from langchain_community.tools import DuckDuckGoSearchResults
-
+from langchain.tools import tool
 duckgo_search = DuckDuckGoSearchResults()
 
+@tool
 def ask_duckduckgo(query):
     """
-    Ask the DuckDuckGo search agent a question and get the response.
-    """
+    Ask DuckDuckGo a question and get the response."""
+
     response = duckgo_search.run(query)
     return response
 

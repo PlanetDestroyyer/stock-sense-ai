@@ -1,6 +1,7 @@
 from langchain.agents import AgentType, initialize_agent
 from langchain_community.tools.yahoo_finance_news import YahooFinanceNewsTool
 from llm import llm
+from langchain.tools import tool
 yfinacen_tools = [YahooFinanceNewsTool()]
 
 
@@ -12,14 +13,14 @@ agent_chain = initialize_agent(
 )
 
 
-
-def ask_yahoo_finance_news(query):
+@tool
+def ask_yahoo_finance_news(stock: str) -> str:
     """
-    Ask the Yahoo Finance News agent a question and get the response.
-    """
-    response = agent_chain.run(query)
+    Ask Yahoo Finance for the latest news about a stock."""
+    response = agent_chain.invoke(stock)
     return response
 
 if __name__ == "__main__":
     # Example usage
-    pass
+    output = ask_yahoo_finance_news("What is the latest news about Apple?")
+    print(output)
