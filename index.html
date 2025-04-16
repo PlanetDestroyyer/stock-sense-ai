@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockSense AI | Broker Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        /* Layout */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .sidebar-header img {
+            width: 50px;
+            margin-bottom: 10px;
+        }
+        
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: rgba(110, 69, 226, 0.3);
+            color: #fff;
+        }
+        
+        .sidebar-nav i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        /* Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        /* Stock Cards */
+        .stock-card {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .stock-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .stock-card img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            margin-right: 15px;
+            object-fit: contain;
+            background: white;
+            padding: 2px;
+        }
+        
+        .up {
+            color: #4cc9f0;
+        }
+        
+        .down {
+            color: #f72585;
+        }
+        
+        /* Chart */
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        /* News Ticker */
+        .news-ticker {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+            height: 40px;
+        }
+        
+        .ticker-content {
+            white-space: nowrap;
+            position: absolute;
+            animation: ticker 20s linear infinite;
+        }
+        
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        /* AI Chat */
+        .ai-chat {
+            margin-top: 30px;
+        }
+        
+        .chat-container {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .chat-message {
+            max-width: 80%;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+        
+        .ai-message {
+            background: rgba(255, 255, 255, 0.1);
+            margin-right: auto;
+        }
+        
+        .user-message {
+            background: rgba(110, 69, 226, 0.3);
+            margin-left: auto;
+        }
+        
+        /* Buttons */
+        button {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        button.primary {
+            background: #6e45e2;
+        }
+        
+        button.primary:hover {
+            background: #7d52ff;
+        }
+        
+        /* Top Movers Section */
+        .movers-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .movers-column {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .movers-column h4 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .movers-column.gainers h4 {
+            color: #4cc9f0;
+        }
+        
+        .movers-column.losers h4 {
+            color: #f72585;
+        }
+        
+        .movers-column .stock-card small {
+            display: block;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 3px;
+        }
+        
+        /* AI Assistant Enhancements */
+        .assistant-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .voice-control {
+            position: relative;
+            background: rgba(247, 37, 133, 0.2) !important;
+            border-radius: 50% !important;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .voice-control.active {
+            background: rgba(247, 37, 133, 0.5) !important;
+        }
+        
+        .text-control {
+            background: rgba(255, 255, 255, 0.1) !important;
+            font-size: 0.8rem;
+            padding: 5px 10px !important;
+        }
+        
+        .pulse-animation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(247, 37, 133, 0.3);
+            animation: pulse 1.5s infinite;
+            opacity: 0;
+        }
+        
+        .voice-control.active .pulse-animation {
+            opacity: 1;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+            70% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+        
+        #voice-status {
+            display: none;
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            background: rgba(110, 69, 226, 0.3);
+            text-align: center;
+        }
+        
+        #voice-status.active {
+            display: block;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .movers-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="https://i.imgur.com/mpwDZ3h.png" alt="Logo" id="logo">
+                <h3>StockSense AI</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="active" id="dashboard-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" id="movers-link">
+                    <i class="fas fa-bolt"></i>
+                    <span>Top Movers</span>
+                </a>
+                <a href="#" id="news-link">
+                    <i class="fas fa-newspaper"></i>
+                    <span>News Impact</span>
+                </a>
+                <a href="#" id="assistant-link">
+                    <i class="fas fa-robot"></i>
+                    <span>AI Assistant</span>
+                </a>
+            </nav>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Dashboard Section -->
+            <div id="dashboard-section">
+                <h2><i class="fas fa-chart-line"></i> Market Dashboard</h2>
+                
+                <!-- Market Overview -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Market Overview</h3>
+                        <div class="time-filter">
+                            <button class="active" data-time="5m">5m</button>
+                            <button data-time="15m">15m</button>
+                            <button data-time="1h">1h</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="marketChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Top Movers -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Top Movers (Last 5 Minutes)</h3>
+                    </div>
+                    
+                    <div class="stock-card" id="aapl-card">
+                        <img src="https://logo.clearbit.com/apple.com" alt="AAPL">
+                        <div style="flex:1">
+                            <h4>AAPL <span class="up">+2.45%</span></h4>
+                            <p>Apple Inc.</p>
+                        </div>
+                        <button class="analyze-btn" data-stock="AAPL">Analyze</button>
+                    </div>
+                    
+                    <div class="stock-card" id="nvda-card">
+                        <img src="https://logo.clearbit.com/nvidia.com" alt="NVDA">
+                        <div style="flex:1">
+                            <h4>NVDA <span class="up">+3.21%</span></h4>
+                            <p>NVIDIA Corp.</p>
+                        </div>
+                        <button class="analyze-btn" data-stock="NVDA">Analyze</button>
+                    </div>
+                    
+                    <div class="stock-card" id="tsla-card">
+                        <img src="https://logo.clearbit.com/tesla.com" alt="TSLA">
+                        <div style="flex:1">
+                            <h4>TSLA <span class="down">-1.23%</span></h4>
+                            <p>Tesla Inc.</p>
+                        </div>
+                        <button class="analyze-btn" data-stock="TSLA">Analyze</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- News Impact Section -->
+            <div id="news-section" style="display:none;">
+                <h2><i class="fas fa-newspaper"></i> News Impact Analysis</h2>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Latest Market News</h3>
+                    </div>
+                    
+                    <div class="news-ticker">
+                        <div class="ticker-content">
+                            <span class="up">AAPL +2.45%</span> - Apple announces new AI features | 
+                            <span class="down">TSLA -1.23%</span> - Tesla recalls announced | 
+                            <span class="up">NVDA +3.21%</span> - NVIDIA reveals new AI chip |
+                            <span class="up">MSFT +1.56%</span> - Microsoft Azure growth continues
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; gap:15px; margin-top:15px;">
+                        <div style="flex:1; background:rgba(247,37,133,0.1); padding:15px; border-radius:8px; border-left:3px solid #f72585;">
+                            <h4>Negative Impact</h4>
+                            <p>Tesla recalls affect stock</p>
+                            <small>2 minutes ago</small>
+                            <button class="read-news" style="margin-top:10px;" data-news="tesla-recall">Read News</button>
+                        </div>
+                        
+                        <div style="flex:1; background:rgba(76,201,240,0.1); padding:15px; border-radius:8px; border-left:3px solid #4cc9f0;">
+                            <h4>Positive Impact</h4>
+                            <p>Apple AI announcement</p>
+                            <small>5 minutes ago</small>
+                            <button class="read-news" style="margin-top:10px;" data-news="apple-ai">Read News</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top Movers Section -->
+            <div id="movers-section" style="display:none;">
+                <h2><i class="fas fa-bolt"></i> Top Movers</h2>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Market Movers</h3>
+                        <div class="time-filter">
+                            <button class="active" data-time="today">Today</button>
+                            <button data-time="week">This Week</button>
+                            <button data-time="month">This Month</button>
+                        </div>
+                    </div>
+                    
+                    <div class="movers-container">
+                        <div class="movers-column gainers">
+                            <h4><i class="fas fa-arrow-up"></i> Top Gainers</h4>
+                            <div class="stock-card" id="nvda-mover-card">
+                                <img src="https://logo.clearbit.com/nvidia.com" alt="NVDA">
+                                <div style="flex:1">
+                                    <h4>NVDA <span class="up">+5.32%</span></h4>
+                                    <p>NVIDIA Corp.</p>
+                                    <small>Volume: 45.2M</small>
+                                </div>
+                                <button class="analyze-btn" data-stock="NVDA">Analyze</button>
+                            </div>
+                            
+                            <div class="stock-card" id="aapl-mover-card">
+                                <img src="https://logo.clearbit.com/apple.com" alt="AAPL">
+                                <div style="flex:1">
+                                    <h4>AAPL <span class="up">+3.78%</span></h4>
+                                    <p>Apple Inc.</p>
+                                    <small>Volume: 78.5M</small>
+                                </div>
+                                <button class="analyze-btn" data-stock="AAPL">Analyze</button>
+                            </div>
+                            
+                            <div class="stock-card" id="msft-mover-card">
+                                <img src="https://logo.clearbit.com/microsoft.com" alt="MSFT">
+                                <div style="flex:1">
+                                    <h4>MSFT <span class="up">+2.91%</span></h4>
+                                    <p>Microsoft Corp.</p>
+                                    <small>Volume: 32.1M</small>
+                                </div>
+                                <button class="analyze-btn" data-stock="MSFT">Analyze</button>
+                            </div>
+                        </div>
+                        
+                        <div class="movers-column losers">
+                            <h4><i class="fas fa-arrow-down"></i> Top Losers</h4>
+                            <div class="stock-card" id="tsla-mover-card">
+                                <img src="https://logo.clearbit.com/tesla.com" alt="TSLA">
+                                <div style="flex:1">
+                                    <h4>TSLA <span class="down">-4.56%</span></h4>
+                                    <p>Tesla Inc.</p>
+                                    <small>Volume: 112.3M</small>
+                                </div>
+                                <button class="analyze-btn" data-stock="TSLA">Analyze</button>
+                            </div>
+                            
+                            <div class="stock-card" id="amzn-mover-card">
+                                <img src="https://logo.clearbit.com/amazon.com" alt="AMZN">
+                                <div style="flex:1">
+                                    <h4>AMZN <span class="down">-2.89%</span></h4>
+                                    <p>Amazon.com Inc.</p>
+                                    <small>Volume: 45.7M</small>
+                                </div>
+                                <button class="analyze-btn" data-stock="AMZN">Analyze</button>
+                            </div>
+                            
+                            <div class="stock-card" id="intc-mover-card">
+                                <img src="https://logo.clearbit.com/intel.com" alt="INTC">
+                                <div style="flex:1">
+                                    <h4>INTC <span class="down">-1.95%</span></h4>
+                                    <p>Intel Corp.</p>
+                                    <small>Volume: 28.9M</small>
+                                </div>
+                                <button class="analyze-btn" data-stock="INTC">Analyze</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Assistant Section -->
+            <div id="assistant-section" style="display:none;">
+                <h2><i class="fas fa-robot"></i> AI Assistant</h2>
+                
+                <div class="card ai-chat">
+                    <div class="card-header">
+                        <h3>Stock Analysis Assistant</h3>
+                        <div class="assistant-controls">
+                            <button id="voice-btn" class="voice-control">
+                                <i class="fas fa-microphone"></i>
+                                <span class="pulse-animation"></span>
+                            </button>
+                            <button id="clear-chat" class="text-control">
+                                <i class="fas fa-trash-alt"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; margin-top:20px;">
+                        <img src="https://i.imgur.com/J5QJY7L.png" alt="AI" style="width:50px; height:50px; border-radius:50%; margin-right:15px;">
+                        
+                        <div style="flex:1">
+                            <div class="chat-container" id="chat-messages">
+                                <div class="chat-message ai-message">
+                                    <p>Hello! I'm your AI stock assistant. How can I help you today?</p>
+                                </div>
+                                
+                                <div class="chat-message ai-message">
+                                    <p>I've detected unusual activity in NVDA stock. Would you like me to analyze it?</p>
+                                    <div style="margin-top:10px;">
+                                        <button class="show-chart" data-stock="NVDA" style="margin-right:5px;">Show Chart</button>
+                                        <button class="read-news" data-news="nvidia-ai">Read News</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display:flex; margin-top:15px;">
+                                <input type="text" id="chat-input" placeholder="Ask about any stock or click mic to speak..." style="flex:1; padding:10px; border-radius:20px; border:none; background:rgba(255,255,255,0.1); color:#fff;">
+                                <button id="send-btn" class="primary" style="margin-left:10px; padding:0 20px;"><i class="fas fa-paper-plane"></i></button>
+                            </div>
+                            
+                            <div id="voice-status">
+                                <i class="fas fa-microphone"></i> Listening...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Market Chart
+            const ctx = document.getElementById('marketChart').getContext('2d');
+            const marketChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 20}, (_, i) => {
+                        const d = new Date();
+                        d.setMinutes(d.getMinutes() - 20 + i);
+                        return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+                    }),
+                    datasets: [{
+                        label: 'S&P 500',
+                        data: Array.from({length: 20}, () => 4400 + Math.random() * 200),
+                        borderColor: '#6e45e2',
+                        backgroundColor: 'rgba(110, 69, 226, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: 'rgba(255,255,255,0.7)'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255,255,255,0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255,255,255,0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Update chart data periodically
+            setInterval(() => {
+                marketChart.data.labels.shift();
+                const d = new Date();
+                marketChart.data.labels.push(d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'));
+                
+                marketChart.data.datasets.forEach(dataset => {
+                    dataset.data.shift();
+                    const lastValue = dataset.data[dataset.data.length - 1];
+                    dataset.data.push(lastValue + (Math.random() - 0.5) * 10);
+                });
+                
+                marketChart.update();
+            }, 5000);
+
+            // Time filter buttons
+            document.querySelectorAll('.time-filter button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelector('.time-filter button.active').classList.remove('active');
+                    this.classList.add('active');
+                    
+                    // In a real app, this would update the chart time frame
+                    if (this.closest('#movers-section')) {
+                        updateMoversData(this.dataset.time);
+                    } else {
+                        alert(`Loading ${this.dataset.time} data...`);
+                    }
+                });
+            });
+
+            // Navigation links
+            document.getElementById('dashboard-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                showSection('dashboard');
+            });
+            
+            document.getElementById('movers-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                showSection('movers');
+            });
+            
+            document.getElementById('news-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                showSection('news');
+            });
+            
+            document.getElementById('assistant-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                showSection('assistant');
+            });
+
+            function showSection(section) {
+                document.getElementById('dashboard-section').style.display = 'none';
+                document.getElementById('news-section').style.display = 'none';
+                document.getElementById('assistant-section').style.display = 'none';
+                document.getElementById('movers-section').style.display = 'none';
+                
+                document.querySelector('.sidebar-nav a.active').classList.remove('active');
+                
+                if (section === 'dashboard') {
+                    document.getElementById('dashboard-section').style.display = 'block';
+                    document.getElementById('dashboard-link').classList.add('active');
+                } else if (section === 'news') {
+                    document.getElementById('news-section').style.display = 'block';
+                    document.getElementById('news-link').classList.add('active');
+                } else if (section === 'assistant') {
+                    document.getElementById('assistant-section').style.display = 'block';
+                    document.getElementById('assistant-link').classList.add('active');
+                } else if (section === 'movers') {
+                    document.getElementById('movers-section').style.display = 'block';
+                    document.getElementById('movers-link').classList.add('active');
+                }
+            }
+
+            // Stock analysis buttons
+            document.querySelectorAll('.analyze-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const stock = this.dataset.stock;
+                    alert(`Analyzing ${stock}... Showing detailed analysis.`);
+                    // In a real app, this would show a detailed analysis
+                });
+            });
+
+            // Show chart buttons
+            document.querySelectorAll('.show-chart').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const stock = this.dataset.stock;
+                    alert(`Showing detailed chart for ${stock}`);
+                    // In a real app, this would show a detailed chart
+                });
+            });
+
+            // Read news buttons
+            document.querySelectorAll('.read-news').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const news = this.dataset.news;
+                    alert(`Showing news: ${news}`);
+                    // In a real app, this would show the news article
+                });
+            });
+
+            // AI Chat functionality
+            document.getElementById('send-btn').addEventListener('click', sendMessage);
+            document.getElementById('chat-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+
+            function sendMessage() {
+                const input = document.getElementById('chat-input');
+                const message = input.value.trim();
+                if (!message) return;
+                
+                // Add user message
+                const userMsg = document.createElement('div');
+                userMsg.className = 'chat-message user-message';
+                userMsg.innerHTML = `<p>${message}</p>`;
+                document.getElementById('chat-messages').appendChild(userMsg);
+                
+                // Clear input
+                input.value = '';
+                
+                // Simulate AI response
+                setTimeout(() => {
+                    const aiMsg = document.createElement('div');
+                    aiMsg.className = 'chat-message ai-message';
+                    
+                    if (message.toLowerCase().includes('nvda') || message.toLowerCase().includes('nvidia')) {
+                        aiMsg.innerHTML = `
+                            <p>NVDA is currently up 3.21% due to positive news about their new AI chip. The stock is showing strong momentum with increasing volume.</p>
+                            <div style="margin-top:10px;">
+                                <button class="show-chart" data-stock="NVDA" style="margin-right:5px;">Show Chart</button>
+                                <button class="read-news" data-news="nvidia-ai">Read News</button>
+                            </div>
+                        `;
+                    } else if (message.toLowerCase().includes('aapl') || message.toLowerCase().includes('apple')) {
+                        aiMsg.innerHTML = `
+                            <p>AAPL is up 2.45% today after announcing new AI features. The RSI is at 62, suggesting there may still be upside potential.</p>
+                            <div style="margin-top:10px;">
+                                <button class="show-chart" data-stock="AAPL" style="margin-right:5px;">Show Chart</button>
+                                <button class="read-news" data-news="apple-ai">Read News</button>
+                            </div>
+                        `;
+                    } else {
+                        aiMsg.innerHTML = `
+                            <p>I've analyzed your query about "${message}". Based on current market data, this stock appears to be in a consolidation phase.</p>
+                            <div style="margin-top:10px;">
+                                <button class="show-chart" data-stock="MSFT" style="margin-right:5px;">Show Chart</button>
+                                <button class="read-news" data-news="market-trends">Market Trends</button>
+                            </div>
+                        `;
+                    }
+                    
+                    document.getElementById('chat-messages').appendChild(aiMsg);
+                    
+                    // Add event listeners to new buttons
+                    aiMsg.querySelector('.show-chart').addEventListener('click', function() {
+                        const stock = this.dataset.stock;
+                        alert(`Showing detailed chart for ${stock}`);
+                    });
+                    
+                    aiMsg.querySelector('.read-news').addEventListener('click', function() {
+                        const news = this.dataset.news;
+                        alert(`Showing news: ${news}`);
+                    });
+                    
+                    // Scroll to bottom
+                    document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+                }, 1000);
+            }
+
+            // Voice recognition for AI Assistant
+            const voiceBtn = document.getElementById('voice-btn');
+            const voiceStatus = document.getElementById('voice-status');
+            
+            // Check if browser supports speech recognition
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            let recognition;
+            
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+                
+                recognition.onstart = function() {
+                    voiceBtn.classList.add('active');
+                    voiceStatus.style.display = 'block';
+                };
+                
+                recognition.onend = function() {
+                    voiceBtn.classList.remove('active');
+                    voiceStatus.style.display = 'none';
+                };
+                
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('chat-input').value = transcript;
+                    sendMessage();
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error', event.error);
+                    voiceBtn.classList.remove('active');
+                    voiceStatus.style.display = 'none';
+                    
+                    const aiMsg = document.createElement('div');
+                    aiMsg.className = 'chat-message ai-message';
+                    aiMsg.innerHTML = `<p>Sorry, I couldn't understand your voice command. Please try again.</p>`;
+                    document.getElementById('chat-messages').appendChild(aiMsg);
+                };
+                
+                voiceBtn.addEventListener('click', function() {
+                    if (voiceBtn.classList.contains('active')) {
+                        recognition.stop();
+                    } else {
+                        try {
+                            recognition.start();
+                        } catch (e) {
+                            console.error('Speech recognition failed:', e);
+                            
+                            const aiMsg = document.createElement('div');
+                            aiMsg.className = 'chat-message ai-message';
+                            aiMsg.innerHTML = `<p>Voice recognition is not available. Please check your microphone settings.</p>`;
+                            document.getElementById('chat-messages').appendChild(aiMsg);
+                        }
+                    }
+                });
+            } else {
+                voiceBtn.style.display = 'none';
+                
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'chat-message ai-message';
+                aiMsg.innerHTML = `<p>Your browser doesn't support speech recognition. Try Chrome or Edge.</p>`;
+                document.getElementById('chat-messages').appendChild(aiMsg);
+            }
+            
+            // Clear chat functionality
+            document.getElementById('clear-chat').addEventListener('click', function() {
+                document.getElementById('chat-messages').innerHTML = `
+                    <div class="chat-message ai-message">
+                        <p>Hello! I'm your AI stock assistant. How can I help you today?</p>
+                    </div>
+                `;
+            });
+
+            // Update movers data
+            function updateMoversData(timeFrame) {
+                // In a real app, this would fetch data from an API
+                console.log(`Updating movers data for ${timeFrame}`);
+                
+                // Simulate data changes
+                const stocks = {
+                    gainers: [
+                        { id: 'nvda-mover-card', baseChange: 5.32 },
+                        { id: 'aapl-mover-card', baseChange: 3.78 },
+                        { id: 'msft-mover-card', baseChange: 2.91 }
+                    ],
+                    losers: [
+                        { id: 'tsla-mover-card', baseChange: -4.56 },
+                        { id: 'amzn-mover-card', baseChange: -2.89 },
+                        { id: 'intc-mover-card', baseChange: -1.95 }
+                    ]
+                };
+                
+                // Update gainers
+                stocks.gainers.forEach(stock => {
+                    const card = document.getElementById(stock.id);
+                    const changeElement = card.querySelector('span');
+                    const volumeElement = card.querySelector('small');
+                    
+                    // Simulate different changes based on time frame
+                    let newChange, newVolume;
+                    if (timeFrame === 'today') {
+                        newChange = stock.baseChange;
+                        newVolume = Math.round(Math.random() * 50) + 'M';
+                    } else if (timeFrame === 'week') {
+                        newChange = stock.baseChange * (1 + Math.random() * 0.5);
+                        newVolume = Math.round(Math.random() * 100) + 'M';
+                    } else {
+                        newChange = stock.baseChange * (1 + Math.random());
+                        newVolume = Math.round(Math.random() * 200) + 'M';
+                    }
+                    
+                    changeElement.textContent = (newChange > 0 ? '+' : '') + newChange.toFixed(2) + '%';
+                    volumeElement.textContent = 'Volume: ' + newVolume;
+                });
+                
+                // Update losers
+                stocks.losers.forEach(stock => {
+                    const card = document.getElementById(stock.id);
+                    const changeElement = card.querySelector('span');
+                    const volumeElement = card.querySelector('small');
+                    
+                    // Simulate different changes based on time frame
+                    let newChange, newVolume;
+                    if (timeFrame === 'today') {
+                        newChange = stock.baseChange;
+                        newVolume = Math.round(Math.random() * 50) + 'M';
+                    } else if (timeFrame === 'week') {
+                        newChange = stock.baseChange * (1 + Math.random() * 0.5);
+                        newVolume = Math.round(Math.random() * 100) + 'M';
+                    } else {
+                        newChange = stock.baseChange * (1 + Math.random());
+                        newVolume = Math.round(Math.random() * 200) + 'M';
+                    }
+                    
+                    changeElement.textContent = (newChange > 0 ? '+' : '') + newChange.toFixed(2) + '%';
+                    volumeElement.textContent = 'Volume: ' + newVolume;
+                });
+            }
+
+            // Simulate stock price changes
+            setInterval(() => {
+                const stocks = [
+                    { id: 'aapl-card', symbol: 'AAPL', base: 189.37 },
+                    { id: 'nvda-card', symbol: 'NVDA', base: 467.65 },
+                    { id: 'tsla-card', symbol: 'TSLA', base: 260.54 },
+                    { id: 'aapl-mover-card', symbol: 'AAPL', base: 3.78 },
+                    { id: 'nvda-mover-card', symbol: 'NVDA', base: 5.32 },
+                    { id: 'msft-mover-card', symbol: 'MSFT', base: 2.91 },
+                    { id: 'tsla-mover-card', symbol: 'TSLA', base: -4.56 },
+                    { id: 'amzn-mover-card', symbol: 'AMZN', base: -2.89 },
+                    { id: 'intc-mover-card', symbol: 'INTC', base: -1.95 }
+                ];
+                
+                stocks.forEach(stock => {
+                    const card = document.getElementById(stock.id);
+                    if (!card) return;
+                    
+                    const changeElement = card.querySelector('span');
+                    if (!changeElement) return;
+                    
+                    const currentChange = parseFloat(changeElement.textContent);
+                    const newChange = currentChange + (Math.random() - 0.5) * 0.3;
+                    
+                    changeElement.textContent = (newChange > 0 ? '+' : '') + newChange.toFixed(2) + '%';
+                    changeElement.className = newChange >= 0 ? 'up' : 'down';
+                    
+                    // Flash the card to show update
+                    card.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                    setTimeout(() => {
+                        card.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                    }, 300);
+                });
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
