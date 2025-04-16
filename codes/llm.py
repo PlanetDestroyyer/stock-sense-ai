@@ -1,5 +1,9 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
+from dotenv import load_dotenv
+import os
+
+
 
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.0-flash-001",
@@ -7,6 +11,7 @@ llm = ChatGoogleGenerativeAI(
     max_tokens=None,
     timeout=None,
     max_retries=2,
+    api_key="AIzaSyBmN3fhXAINw0BDubja2qBMB3DT0nUENxw",
     # other params...
 )
 
