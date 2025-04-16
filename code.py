@@ -8,3 +8,5 @@ gainers = screener.screener_view()
 print("🔼 Top Gainers:")
 print(gainers)
 
+if __name__ == "__main__":
+    pass
