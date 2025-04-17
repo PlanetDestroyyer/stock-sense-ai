@@ -110,7 +110,7 @@ def process_agent_output(raw_response):
 # Main execution
 if __name__ == "__main__":
     try:
-        query = "Top lossers in stock market today?"
+        query = "Tell me about Tesla stock performance?"
         corrected_query = preprocess_query(query)
         raw_response = agent_executor.invoke({
             "input": query,
