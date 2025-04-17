@@ -1,0 +1,92 @@
+{% extends "index.html" %} {% block style %} {{ super() }}
+    <link rel="stylesheet" href="static/styles/main.css">
+    <link rel="stylesheet" href="static/styles/top-movers.css">
+    {% endblock %} {% block content %}
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2><i class="fas fa-bolt"></i> Top Movers</h2>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3>Market Movers</h3>
+                    <div class="time-filter">
+                        <button class="active" data-time="today">Today</button>
+                        <button data-time="week">This Week</button>
+                        <button data-time="month">This Month</button>
+                    </div>
+                </div>
+                
+                <div class="movers-container">
+                    <div class="movers-column gainers">
+                        <h4><i class="fas fa-arrow-up"></i> Top Gainers</h4>
+                        <div class="stock-card" id="nvda-mover-card">
+                            <img src="https://logo.clearbit.com/nvidia.com" alt="NVDA">
+                            <div style="flex:1">
+                                <h4>NVDA <span class="up">+5.32%</span></h4>
+                                <p>NVIDIA Corp.</p>
+                                <small>Volume: 45.2M</small>
+                            </div>
+                            <button class="analyze-btn" data-stock="NVDA">Analyze</button>
+                        </div>
+                        
+                        <div class="stock-card" id="aapl-mover-card">
+                            <img src="https://logo.clearbit.com/apple.com" alt="AAPL">
+                            <div style="flex:1">
+                                <h4>AAPL <span class="up">+3.78%</span></h4>
+                                <p>Apple Inc.</p>
+                                <small>Volume: 78.5M</small>
+                            </div>
+                            <button class="analyze-btn" data-stock="AAPL">Analyze</button>
+                        </div>
+                        
+                        <div class="stock-card" id="msft-mover-card">
+                            <img src="https://logo.clearbit.com/microsoft.com" alt="MSFT">
+                            <div style="flex:1">
+                                <h4>MSFT <span class="up">+2.91%</span></h4>
+                                <p>Microsoft Corp.</p>
+                                <small>Volume: 32.1M</small>
+                            </div>
+                            <button class="analyze-btn" data-stock="MSFT">Analyze</button>
+                        </div>
+                    </div>
+                    
+                    <div class="movers-column losers">
+                        <h4><i class="fas fa-arrow-down"></i> Top Losers</h4>
+                        <div class="stock-card" id="tsla-mover-card">
+                            <img src="https://logo.clearbit.com/tesla.com" alt="TSLA">
+                            <div style="flex:1">
+                                <h4>TSLA <span class="down">-4.56%</span></h4>
+                                <p>Tesla Inc.</p>
+                                <small>Volume: 112.3M</small>
+                            </div>
+                            <button class="analyze-btn" data-stock="TSLA">Analyze</button>
+                        </div>
+                        
+                        <div class="stock-card" id="amzn-mover-card">
+                            <img src="https://logo.clearbit.com/amazon.com" alt="AMZN">
+                            <div style="flex:1">
+                                <h4>AMZN <span class="down">-2.89%</span></h4>
+                                <p>Amazon.com Inc.</p>
+                                <small>Volume: 45.7M</small>
+                            </div>
+                            <button class="analyze-btn" data-stock="AMZN">Analyze</button>
+                        </div>
+                        
+                        <div class="stock-card" id="intc-mover-card">
+                            <img src="https://logo.clearbit.com/intel.com" alt="INTC">
+                            <div style="flex:1">
+                                <h4>INTC <span class="down">-1.95%</span></h4>
+                                <p>Intel Corp.</p>
+                                <small>Volume: 28.9M</small>
+                            </div>
+                            <button class="analyze-btn" data-stock="INTC">Analyze</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../scripts/main.js"></script>
+    <script src="../scripts/top-movers.js"></script>
+    {% endblock %}
