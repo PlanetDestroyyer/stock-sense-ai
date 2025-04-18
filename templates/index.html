@@ -19,7 +19,7 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <img src="assets/images/logo.png" alt="Logo" id="logo">
+                <img src="static/assets/image/logo.png" alt="Logo" id="logo">
                 <h3>StockSense AI</h3>
             </div>
             <nav class="sidebar-nav">
@@ -112,35 +112,32 @@
                 <!-- Top Movers -->
                 <div class="card">
                     <div class="card-header">
-                        <h3>Top Movers (Last 5 Minutes)</h3>
+                        <h3 >Top Movers </h3>
                     </div>
-                    
-                    <div class="stock-card" id="aapl-card">
-                        <img src="https://logo.clearbit.com/apple.com" alt="AAPL">
-                        <div style="flex:1">
-                            <h4>AAPL <span class="up">+2.45%</span></h4>
-                            <p>Apple Inc.</p>
+                    <div class="movers-column gainers">
+                        <h4 style="color: green;
+                        margin:
+                      2rem 0 35px 2px;"><i class="fas fa-arrow-up" ></i> Top Gainers</h4>
+                        {% for stock in gainers %}
+                        <div class="stock-card">
+                          <div style="flex:1">
+                            <h4>{{ stock['Ticker'] }} <span class="up">{{ stock['Change'] }}</span></h4>
+                            <p>{{ stock['Company'] }}</p>
+                            <small>Volume: {{ stock['Volume'] }}</small>
+                          </div>
+                          <form action="{{ url_for('news') }}" method="POST">
+                            <input type="hidden" name="query" value="{{ stock['Ticker'] }}">
+                            <button class="analyze-btn" type="submit">Analyze</button>
+                          </form>
                         </div>
-                        <button class="analyze-btn" data-stock="AAPL">Analyze</button>
+                        {% endfor %}
+                        
                     </div>
+
                     
-                    <div class="stock-card" id="nvda-card">
-                        <img src="https://logo.clearbit.com/nvidia.com" alt="NVDA">
-                        <div style="flex:1">
-                            <h4>NVDA <span class="up">+3.21%</span></h4>
-                            <p>NVIDIA Corp.</p>
-                        </div>
-                        <button class="analyze-btn" data-stock="NVDA">Analyze</button>
-                    </div>
+
                     
-                    <div class="stock-card" id="tsla-card">
-                        <img src="https://logo.clearbit.com/tesla.com" alt="TSLA">
-                        <div style="flex:1">
-                            <h4>TSLA <span class="down">-1.23%</span></h4>
-                            <p>Tesla Inc.</p>
-                        </div>
-                        <button class="analyze-btn" data-stock="TSLA">Analyze</button>
-                    </div>
+
                 </div>
             </div>
         </div>

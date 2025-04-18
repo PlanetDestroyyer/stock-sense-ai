@@ -7,6 +7,7 @@ from flask_cors import CORS
 from codes.main import agent_executor, process_agent_output
 from codes.yahoo_finance_helper import ask_yahoo_finance_news
 from codes.ticker_info import ticker_news
+from codes.topMovers import get_top_gainers, get_top_losers
 import requests
 import pandas as pd
 from datetime import datetime
@@ -79,7 +80,8 @@ def get_valid_data():
 
 @app.route('/')
 def index():
-    return render_template("index.html")
+    gainers = get_top_gainers()
+    return render_template("index.html",gainers=gainers.to_dict(orient='records'))
 
 @app.route('/api/market-data')
 def get_market_data():
@@ -99,7 +101,13 @@ def get_market_data():
 
 @app.route('/top_movers')
 def movers():
-    return render_template("top-movers.html")
+    gainers = get_top_gainers()
+    losers = get_top_losers()
+    return render_template(
+        "top-movers.html", 
+        gainers=gainers.to_dict(orient='records'), 
+        losers=losers.to_dict(orient='records')
+    )
 
 
 
@@ -129,11 +137,13 @@ def assistant():
             
             # Prepare standardized response format
             response_data = {
-                "response": response.response if hasattr(response, 'response') else str(response),
-                "summary": getattr(response, 'summary', None),
-                "tools_used": getattr(response, 'tools_used', []),
-                "links": getattr(response, 'links', [])
-            }
+    "topic": response.get("topic"),
+    "response": response.get("response"),
+    "summary": response.get("summary"),
+    "tools_used": response.get("tools_used", []),
+    "links": response.get("links", []),
+    "source": response.get("source", [])
+}
 
             return jsonify({
                 "response": response_data,
@@ -189,6 +199,8 @@ def news():
             logger.error(f"Error fetching news for {ticker}: {e}", exc_info=True)
             return render_template("news.html", error=f"Error fetching data for {ticker}", query=ticker, news=[], price="N/A")
     return render_template("news.html", query="", news=[], price="N/A")
+
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
