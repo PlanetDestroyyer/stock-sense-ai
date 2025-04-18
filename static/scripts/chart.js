@@ -1,17 +1,20 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Market Chart
+document.addEventListener('DOMContentLoaded', async function () {
     const ctx = document.getElementById('marketChart').getContext('2d');
+
+    async function fetchMarketData(interval = '5m') {
+        const res = await fetch(`http://127.0.0.1:5000/api/market-data?interval=${interval}`);
+        return await res.json();
+    }
+
+    const initialData = await fetchMarketData();
+
     const marketChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: Array.from({length: 20}, (_, i) => {
-                const d = new Date();
-                d.setMinutes(d.getMinutes() - 20 + i);
-                return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
-            }),
+            labels: initialData.labels,
             datasets: [{
                 label: 'S&P 500',
-                data: Array.from({length: 20}, () => 4400 + Math.random() * 200),
+                data: initialData.data,
                 borderColor: '#6e45e2',
                 backgroundColor: 'rgba(110, 69, 226, 0.1)',
                 borderWidth: 2,
@@ -23,43 +26,39 @@ document.addEventListener('DOMContentLoaded', function() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: false
-                }
+                legend: { display: false }
             },
             scales: {
                 x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: 'rgba(255,255,255,0.7)'
-                    }
+                    grid: { display: false },
+                    ticks: { color: 'rgba(255,255,255,0.7)' }
                 },
                 y: {
-                    grid: {
-                        color: 'rgba(255,255,255,0.1)'
-                    },
-                    ticks: {
-                        color: 'rgba(255,255,255,0.7)'
-                    }
+                    grid: { color: 'rgba(255,255,255,0.1)' },
+                    ticks: { color: 'rgba(255,255,255,0.7)' }
                 }
             }
         }
     });
 
-    // Update chart data periodically
-    setInterval(() => {
-        marketChart.data.labels.shift();
-        const d = new Date();
-        marketChart.data.labels.push(d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'));
-        
-        marketChart.data.datasets.forEach(dataset => {
-            dataset.data.shift();
-            const lastValue = dataset.data[dataset.data.length - 1];
-            dataset.data.push(lastValue + (Math.random() - 0.5) * 10);
-        });
-        
+    // Update every 30 seconds
+    setInterval(async () => {
+        const updatedData = await fetchMarketData();
+        marketChart.data.labels = updatedData.labels;
+        marketChart.data.datasets[0].data = updatedData.data;
         marketChart.update();
-    }, 5000);
+    }, 30000);
+
+    // Time range buttons
+    document.querySelectorAll('.time-filter button').forEach(button => {
+        button.addEventListener('click', async () => {
+            document.querySelectorAll('.time-filter button').forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+            const interval = button.getAttribute('data-time');
+            const newData = await fetchMarketData(interval);
+            marketChart.data.labels = newData.labels;
+            marketChart.data.datasets[0].data = newData.data;
+            marketChart.update();
+        });
+    });
 });

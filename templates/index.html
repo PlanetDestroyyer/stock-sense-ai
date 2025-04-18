@@ -49,19 +49,65 @@
                 <h2><i class="fas fa-chart-line"></i> Market Dashboard</h2>
                 
                 <!-- Market Overview -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Market Overview</h3>
-                        <div class="time-filter">
-                            <button class="active" data-time="5m">5m</button>
-                            <button data-time="15m">15m</button>
-                            <button data-time="1h">1h</button>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="marketChart"></canvas>
-                    </div>
+                <div id="chartContainer">
+                    <canvas id="stockChart"></canvas>
                 </div>
+            
+                <!-- Load Chart.js from CDN -->
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <script>
+                    // Fetch data from the API
+                    fetch('/api/market-data')
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.error) {
+                                alert(data.error);
+                                return;
+                            }
+            
+                            // Create the chart
+                            const ctx = document.getElementById('stockChart').getContext('2d');
+                            new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: data.labels,
+                                    datasets: [{
+                                        label: 'AAPL Closing Price ($)',
+                                        data: data.prices,
+                                        borderColor: 'blue',
+                                        fill: false,
+                                        tension: 0.1
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    scales: {
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: 'Time (HH:MM)'
+                                            }
+                                        },
+                                        y: {
+                                            title: {
+                                                display: true,
+                                                text: 'Price (USD)'
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching data:', error);
+                            alert('Failed to load stock data. Please try again later.');
+                        });
+                </script>
                 
                 <!-- Top Movers -->
                 <div class="card">
@@ -100,8 +146,8 @@
         </div>
     </div>
 
-    <script src="scripts/chart.js"></script>
-    <script src="scripts/main.js"></script>
+    <script src="static/scripts/chart.js"></script>
+    <script src="static/scripts/main.js"></script>
 
     {% endblock %}
 </body>
