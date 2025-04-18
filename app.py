@@ -1,4 +1,7 @@
 from flask import Flask, render_template, request, jsonify
+import logging
+import traceback
+from typing import Dict, Any
 from flask_compress import Compress
 from flask_cors import CORS
 from codes.main import agent_executor, process_agent_output
@@ -98,43 +101,76 @@ def get_market_data():
 def movers():
     return render_template("top-movers.html")
 
+
+
+
+
 @app.route('/ai_assistant', methods=['GET', 'POST'])
 def assistant():
     if request.method == 'POST':
-        query = request.form.get('query')
-        if not query:
-            return jsonify({"error": "Query is required"}) if request.headers.get('X-Requested-With') == 'XMLHttpRequest' else render_template("ai-assistant.html", error="Query is required", query="")
         try:
-            logger.info(f"Processing query: {query}")
-            # Call the agent executor with the query
+            # Get query from JSON or form data
+            if request.is_json:
+                query = request.json.get('query', '').strip()
+            else:
+                query = request.form.get('query', '').strip()
+
+            if not query:
+                return jsonify({"error": "Query is required"}), 400
+
+            logging.info(f"Processing query: {query}")
+            
+            # Call your AI agent
             raw_response = agent_executor.invoke({"input": query})
-            logger.info(f"Raw agent response: {raw_response}")
-            
-            # Process the raw response
+            logging.info(f"Raw agent response: {raw_response}")
+
+            # Process the response
             response = process_agent_output(raw_response)
-            logger.info(f"Processed response: {response}")
             
-            # Return JSON response for AJAX requests
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify({"response": response.dict() if hasattr(response, "dict") else response, "query": query})
-            
-            # Return HTML response for direct form submissions
-            return render_template("ai-assistant.html", response=response, query=query)
-            
+            # Prepare standardized response format
+            response_data = {
+                "response": response.response if hasattr(response, 'response') else str(response),
+                "summary": getattr(response, 'summary', None),
+                "tools_used": getattr(response, 'tools_used', []),
+                "links": getattr(response, 'links', [])
+            }
+
+            return jsonify({
+                "response": response_data,
+                "query": query
+            })
+
         except Exception as e:
-            logger.error(f"Error in AI assistant: {str(e)}")
-            logger.error(traceback.format_exc())
-            error_msg = f"An error occurred: {str(e)}"
-            
-            # Return JSON error for AJAX requests
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify({"error": error_msg})
-            
-            # Return HTML error for direct form submissions
-            return render_template("ai-assistant.html", error=error_msg, query=query)
-    
-    # GET request - just show the form
-    return render_template("ai-assistant.html", query="", response=None)
+            logging.error(f"Error in AI assistant: {str(e)}")
+            logging.error(traceback.format_exc())
+            return jsonify({
+                "error": f"An error occurred: {str(e)}"
+            }), 500
+
+    # GET request - show empty chat interface
+    return render_template("ai-assistant.html")
+
+
+def process_agent_output(raw_response: Dict[str, Any]) -> Any:
+    """
+    Process the raw response from the AI agent into a structured format.
+    Modify this function according to your agent's response structure.
+    """
+    try:
+        # Example processing - adjust based on your actual agent response
+        if 'output' in raw_response:
+            # Try to parse JSON if output is in JSON format
+            if raw_response['output'].strip().startswith('```json'):
+                import json
+                json_str = raw_response['output'].replace('```json', '').replace('```', '').strip()
+                return json.loads(json_str)
+            return {"response": raw_response['output']}
+        return {"response": str(raw_response)}
+    except Exception as e:
+        logging.error(f"Error processing agent output: {str(e)}")
+        return {"response": str(raw_response), "error": "Could not process agent output"}
+
+
 
 @app.route('/news', methods=['GET', 'POST'])
 def news():

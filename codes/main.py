@@ -1,7 +1,7 @@
 import os
 from codes.news import ask_duckduckgo
 from codes.ticker_info import stock_info, ticker_news
-from codes.yahoo_finance_helper import ask_yahoo_finance_news
+from langchain_community.tools.yahoo_finance_news import YahooFinanceNewsTool
 from codes.llm import llm
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
@@ -10,6 +10,9 @@ from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.tools import Tool
 from typing import Optional, List
 import traceback
+
+
+ask_yahoo_finance_news = YahooFinanceNewsTool()
 
 # Set USER_AGENT to avoid web scraping issues
 os.environ["USER_AGENT"] = "StockSenseAI/1.0 (stock-sense-ai@example.com)"
@@ -83,7 +86,7 @@ agent = create_tool_calling_agent(
 agent_executor = AgentExecutor(
     agent=agent,
     tools=tools,
-    verbose=True,  # Enable for debugging
+    verbose=False,  # Enable for debugging
     max_iterations=6,  # Allow more iterations for complex queries
     handle_parsing_errors=True,  # Better error handling
 )
