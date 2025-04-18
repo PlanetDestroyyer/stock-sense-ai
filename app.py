@@ -10,7 +10,11 @@ from datetime import datetime
 import logging
 import os
 import traceback
+from dotenv import load_dotenv
 
+load_dotenv()
+
+ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
 # Initialize Flask app
 app = Flask(__name__, static_url_path='/static')
 Compress(app)
@@ -21,7 +25,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Alpha Vantage API Key
-ALPHA_VANTAGE_API_KEY = 'SAMN53BP9STIKYBS'  # Replace with a valid key
+ # Replace with a valid key
 
 # Base URL for Alpha Vantage API
 BASE_URL = 'https://www.alphavantage.co/query'
