@@ -3,10 +3,95 @@
 {{ super() }}
 <link rel="stylesheet" href="/static/styles/main.css">
 <link rel="stylesheet" href="/static/styles/ai-assistant.css">
+<style>
+    /* Loading indicator styles */
+    .loading-indicator {
+        display: flex;
+        justify-content: center;
+        padding: 10px;
+    }
+    .loading-indicator .dot {
+        width: 8px;
+        height: 8px;
+        margin: 0 4px;
+        background-color: rgb(29, 29, 93);
+        border-radius: 50%;
+        animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .loading-indicator .dot:nth-child(1) {
+        animation-delay: -0.32s;
+    }
+    .loading-indicator .dot:nth-child(2) {
+        animation-delay: -0.16s;
+    }
+    @keyframes bounce {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+    }
+    
+    /* Chat message styles */
+    .chat-message {
+        margin-bottom: 15px;
+        padding: 12px 15px;
+        border-radius: 18px;
+        max-width: 80%;
+        word-wrap: break-word;
+    }
+    .user-message {
+        background-color: #2b3366;
+        color: white;
+        margin-left: auto;
+    }
+    .ai-message {
+        background-color: #f1f1f1;
+        color: #333;
+        margin-right: auto;
+    }
+    
+    /* Action button styles */
+    .action-buttons {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .action-btn {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+    .chart-btn {
+        background-color: #2196F3;
+        color: white;
+    }
+    .news-btn {
+        background-color: #FF9800;
+        color: white;
+    }
+    
+    /* Input area styles */
+    #chat-input {
+        flex: 1;
+        padding: 12px 15px;
+        border-radius: 20px;
+        border: 1px solid #ddd;
+        font-size: 1em;
+    }
+    #send-btn {
+        margin-left: 10px;
+        padding: 0 20px;
+        background-color: #333578;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<!-- Main Content -->
 <div class="main-content">
     <h2><i class="fas fa-robot"></i> AI Assistant</h2>
     
@@ -32,50 +117,16 @@
                     <div class="chat-message ai-message">
                         <p>Hello! I'm your AI stock assistant. How can I help you today?</p>
                     </div>
-                    
-                    <div class="chat-message ai-message">
-                        <p>I've detected unusual activity in NVDA stock. Would you like me to analyze it?</p>
-                        <div style="margin-top:10px;">
-                            <button class="show-chart" data-stock="NVDA" style="margin-right:5px;">Show Chart</button>
-                            <button class="read-news" data-news="nvidia-ai">Read News</button>
-                        </div>
-                    </div>
-                    
-                    {% if response %}
-                        <div class="chat-message user-message">
-                            <p>{{ query }}</p>
-                        </div>
-                        <div class="chat-message ai-message">
-                            <p>{{ response.response | default("No response available") }}</p>
-                            {% if response.summary %}
-                                <p><strong>Summary:</strong> {{ response.summary }}</p>
-                            {% endif %}
-                            {% if response.links %}
-                                <p><strong>Links:</strong></p>
-                                <ul>
-                                    {% for link in response.links %}
-                                        <li><a href="{{ link }}" target="_blank">{{ link }}</a></li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                            {% if response.tools_used %}
-                                <p><strong>Tools Used:</strong> {{ response.tools_used | join(", ") }}</p>
-                            {% endif %}
-                        </div>
-                    {% endif %}
-                    {% if error %}
-                        <div class="chat-message ai-message">
-                            <p style="color: red;">Error: {{ error }}</p>
-                        </div>
-                    {% endif %}
                 </div>
                 
-                <form id="chat-form" action="/ai_assistant" method="POST" style="display:flex; margin-top:15px;">
-                    <input type="text" id="chat-input" name="query" placeholder="Ask about any stock or click mic to speak..." style="flex:1; padding:10px; border-radius:20px; border:none; background:rgba(255,255,255,0.1); color:#fff;" value="{{ query | default('') }}">
-                    <button id="send-btn" type="submit" class="primary" style="margin-left:10px; padding:0 20px;"><i class="fas fa-paper-plane"></i></button>
+                <form id="chat-form" style="display:flex; margin-top:15px;">
+                    <input type="text" id="chat-input" name="query" placeholder="Ask about any stock..." autocomplete="off">
+                    <button id="send-btn" type="submit">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
                 </form>
                 
-                <div id="voice-status" style="display: none;">
+                <div id="voice-status" style="display: none; margin-top:10px; color:#666;">
                     <i class="fas fa-microphone"></i> Listening...
                 </div>
             </div>
@@ -83,6 +134,5 @@
     </div>
 </div>
 
-<script src="/static/scripts/main.js"></script>
 <script src="/static/scripts/ai-assistant.js"></script>
 {% endblock %}
