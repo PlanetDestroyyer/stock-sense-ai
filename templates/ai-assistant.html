@@ -1,58 +1,88 @@
-{% extends "index.html" %} {% block style %} {{ super() }}
-    <link rel="stylesheet" href="/home/x/projects/stock-sense-ai/static/styles/main.css">
-    <link rel="stylesheet" href="static/styles/ai-assistant.css">
+{% extends "index.html" %}
+{% block style %}
+{{ super() }}
+<link rel="stylesheet" href="/static/styles/main.css">
+<link rel="stylesheet" href="/static/styles/ai-assistant.css">
+{% endblock %}
 
-    {% endblock %} {% block content %}
-        <!-- Main Content -->
-        <div class="main-content">
-            <h2><i class="fas fa-robot"></i> AI Assistant</h2>
+{% block content %}
+<!-- Main Content -->
+<div class="main-content">
+    <h2><i class="fas fa-robot"></i> AI Assistant</h2>
+    
+    <div class="card ai-chat">
+        <div class="card-header">
+            <h3>Stock Analysis Assistant</h3>
+            <div class="assistant-controls">
+                <button id="voice-btn" class="voice-control">
+                    <i class="fas fa-microphone"></i>
+                    <span class="pulse-animation"></span>
+                </button>
+                <button id="clear-chat" class="text-control">
+                    <i class="fas fa-trash-alt"></i> Clear
+                </button>
+            </div>
+        </div>
+        
+        <div style="display:flex; margin-top:20px;">
+            <img src="/static/images/ai-avatar.png" alt="AI" style="width:50px; height:50px; border-radius:50%; margin-right:15px;">
             
-            <div class="card ai-chat">
-                <div class="card-header">
-                    <h3>Stock Analysis Assistant</h3>
-                    <div class="assistant-controls">
-                        <button id="voice-btn" class="voice-control">
-                            <i class="fas fa-microphone"></i>
-                            <span class="pulse-animation"></span>
-                        </button>
-                        <button id="clear-chat" class="text-control">
-                            <i class="fas fa-trash-alt"></i> Clear
-                        </button>
+            <div style="flex:1">
+                <div class="chat-container" id="chat-messages">
+                    <div class="chat-message ai-message">
+                        <p>Hello! I'm your AI stock assistant. How can I help you today?</p>
                     </div>
+                    
+                    <div class="chat-message ai-message">
+                        <p>I've detected unusual activity in NVDA stock. Would you like me to analyze it?</p>
+                        <div style="margin-top:10px;">
+                            <button class="show-chart" data-stock="NVDA" style="margin-right:5px;">Show Chart</button>
+                            <button class="read-news" data-news="nvidia-ai">Read News</button>
+                        </div>
+                    </div>
+                    
+                    {% if response %}
+                        <div class="chat-message user-message">
+                            <p>{{ query }}</p>
+                        </div>
+                        <div class="chat-message ai-message">
+                            <p>{{ response.response | default("No response available") }}</p>
+                            {% if response.summary %}
+                                <p><strong>Summary:</strong> {{ response.summary }}</p>
+                            {% endif %}
+                            {% if response.links %}
+                                <p><strong>Links:</strong></p>
+                                <ul>
+                                    {% for link in response.links %}
+                                        <li><a href="{{ link }}" target="_blank">{{ link }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            {% if response.tools_used %}
+                                <p><strong>Tools Used:</strong> {{ response.tools_used | join(", ") }}</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    {% if error %}
+                        <div class="chat-message ai-message">
+                            <p style="color: red;">Error: {{ error }}</p>
+                        </div>
+                    {% endif %}
                 </div>
                 
-                <div style="display:flex; margin-top:20px;">
-                    <img src="../assets/images/ai-avatar.png" alt="AI" style="width:50px; height:50px; border-radius:50%; margin-right:15px;">
-                    
-                    <div style="flex:1">
-                        <div class="chat-container" id="chat-messages">
-                            <div class="chat-message ai-message">
-                                <p>Hello! I'm your AI stock assistant. How can I help you today?</p>
-                            </div>
-                            
-                            <div class="chat-message ai-message">
-                                <p>I've detected unusual activity in NVDA stock. Would you like me to analyze it?</p>
-                                <div style="margin-top:10px;">
-                                    <button class="show-chart" data-stock="NVDA" style="margin-right:5px;">Show Chart</button>
-                                    <button class="read-news" data-news="nvidia-ai">Read News</button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div style="display:flex; margin-top:15px;">
-                            <input type="text" id="chat-input" placeholder="Ask about any stock or click mic to speak..." style="flex:1; padding:10px; border-radius:20px; border:none; background:rgba(255,255,255,0.1); color:#fff;">
-                            <button id="send-btn" class="primary" style="margin-left:10px; padding:0 20px;"><i class="fas fa-paper-plane"></i></button>
-                        </div>
-                        
-                        <div id="voice-status">
-                            <i class="fas fa-microphone"></i> Listening...
-                        </div>
-                    </div>
+                <form id="chat-form" action="/ai_assistant" method="POST" style="display:flex; margin-top:15px;">
+                    <input type="text" id="chat-input" name="query" placeholder="Ask about any stock or click mic to speak..." style="flex:1; padding:10px; border-radius:20px; border:none; background:rgba(255,255,255,0.1); color:#fff;" value="{{ query | default('') }}">
+                    <button id="send-btn" type="submit" class="primary" style="margin-left:10px; padding:0 20px;"><i class="fas fa-paper-plane"></i></button>
+                </form>
+                
+                <div id="voice-status" style="display: none;">
+                    <i class="fas fa-microphone"></i> Listening...
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="../scripts/main.js"></script>
-    <script src="../scripts/ai-assistant.js"></script>
+<script src="/static/scripts/main.js"></script>
+<script src="/static/scripts/ai-assistant.js"></script>
 {% endblock %}

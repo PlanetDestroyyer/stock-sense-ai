@@ -1,44 +1,69 @@
-{% extends "index.html" %} {% block style %} {{ super() }}
-    
-    <link rel="stylesheet" href="static/styles/ai-assistant.css">
+{% extends "index.html" %}
+{% block style %}
+{{ super() }}
+<link rel="stylesheet" href="/static/styles/ai-assistant.css">
+{% endblock %}
 
-    {% endblock %} {% block content %}
-        <!-- Main Content -->
-        <div class="main-content">
-            <h2><i class="fas fa-newspaper"></i> News Impact Analysis</h2>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h3>Latest Market News</h3>
-                </div>
-                
-                <div class="news-ticker">
-                    <div class="ticker-content">
-                        <span class="up">AAPL +2.45%</span> - Apple announces new AI features | 
-                        <span class="down">TSLA -1.23%</span> - Tesla recalls announced | 
-                        <span class="up">NVDA +3.21%</span> - NVIDIA reveals new AI chip |
-                        <span class="up">MSFT +1.56%</span> - Microsoft Azure growth continues
-                    </div>
-                </div>
-                
-                <div style="display:flex; gap:15px; margin-top:15px;">
-                    <div style="flex:1; background:rgba(247,37,133,0.1); padding:15px; border-radius:8px; border-left:3px solid #f72585;">
-                        <h4>Negative Impact</h4>
-                        <p>Tesla recalls affect stock</p>
-                        <small>2 minutes ago</small>
-                        <button class="read-news" style="margin-top:10px;" data-news="tesla-recall">Read News</button>
-                    </div>
-                    
-                    <div style="flex:1; background:rgba(76,201,240,0.1); padding:15px; border-radius:8px; border-left:3px solid #4cc9f0;">
-                        <h4>Positive Impact</h4>
-                        <p>Apple AI announcement</p>
-                        <small>5 minutes ago</small>
-                        <button class="read-news" style="margin-top:10px;" data-news="apple-ai">Read News</button>
-                    </div>
-                </div>
-            </div>
+{% block content %}
+<!-- Main Content -->
+<div class="main-content">
+    <h2><i class="fas fa-newspaper"></i> News Impact Analysis</h2>
+
+    <!-- Ticker Input Form -->
+    <div class="card" style="margin-bottom: 20px;">
+        <div class="card-header">
+            <h3>Enter Stock Ticker</h3>
         </div>
+        <form method="POST" action="/news" style="padding: 15px;">
+            <input type="text" name="query" placeholder="Enter ticker (e.g., AAPL)" value="{{ query }}" style="padding: 8px; width: 200px; margin-right: 10px;">
+            <button type="submit" style="padding: 8px 15px; background: #4cc9f0; color: white; border: none; border-radius: 4px;">Get News & Price</button>
+        </form>
+        {% if error %}
+            <p style="color: red; padding: 0 15px;">{{ error }}</p>
+        {% endif %}
     </div>
 
-    <script src="../scripts/main.js"></script>
-    {% endblock %}
+    <!-- News and Price Display -->
+    {% if news or price != "N/A" %}
+    <div class="card">
+        <div class="card-header">
+            <h3>Latest Market News for {{ ticker }}</h3>
+            <h4>Current Price: ${{ price }}</h4>
+        </div>
+        
+        <div class="news-ticker">
+            <div class="ticker-content">
+                {% if news %}
+                    {% for item in news %}
+                        <span class="news-item">{{ item.Title }} | </span>
+                    {% endfor %}
+                {% else %}
+                    <span>No news available for {{ ticker }}</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:15px; margin-top:15px;">
+            {% if news %}
+                {% for item in news[:2] %}
+                    <div style="flex:1; background:rgba(76,201,240,0.1); padding:15px; border-radius:8px; border-left:3px solid #4cc9f0;">
+                        <h4>News Update</h4>
+                        <p>{{ item.Title }}</p>
+                        <small>{{ item.Date }}</small>
+                        <button class="read-news" style="margin-top:10px;" data-news="{{ item.Title|lower|replace(' ', '-') }}">Read News</button>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div style="flex:1; background:rgba(247,37,133,0.1); padding:15px; border-radius:8px; border-left:3px solid #f72585;">
+                    <h4>No News Available</h4>
+                    <p>No recent news found for {{ ticker }}.</p>
+                    <small>Just now</small>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="/static/scripts/main.js"></script>
+{% endblock %}

@@ -1,6 +1,6 @@
 from langchain.agents import AgentType, initialize_agent
 from langchain_community.tools.yahoo_finance_news import YahooFinanceNewsTool
-from llm import llm
+from codes.llm import llm
 from langchain.tools import tool
 yfinacen_tools = [YahooFinanceNewsTool()]
 
