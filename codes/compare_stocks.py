@@ -14,9 +14,13 @@ def compare_stocks(ticker1: str, ticker2: str) -> str:
         fundamentals2 = stock2.ticker_fundament()
 
         keys_to_compare = [
-            'Price', 'P/E', 'EPS (ttm)', 'Dividend %',
-            'ROA', 'ROE', 'Market Cap', '52W High', '52W Low'
-        ]
+    'Price', 'P/E', 'Forward P/E', 'PEG', 'EPS (ttm)', 'EPS next 5Y',
+    'Dividend %', 'ROA', 'ROE', 'Gross Margin', 'Operating Margin',
+    'Profit Margin', 'Current Ratio', 'Debt/Eq',
+    'Market Cap', 'Beta', 'ATR', 'RSI (14)', 'SMA50', 'SMA200',
+    '52W High', '52W Low', 'Insider Own', 'Insider Trans', 'Inst Own'
+]
+
 
         data = {
             f"{ticker1.upper()}": [fundamentals1.get(k, 'N/A') for k in keys_to_compare],
