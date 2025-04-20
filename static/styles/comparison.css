@@ -1,0 +1,310 @@
+/* Comparison Page Styles */
+.comparison-card {
+    text-align: center;
+    padding: 30px;
+}
+
+.comparison-header {
+    margin-bottom: 30px;
+}
+
+.comparison-header h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: #6e45e2;
+}
+
+.comparison-header p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+.comparison-inputs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.stock-input {
+    flex: 1;
+    max-width: 300px;
+}
+
+.input-container {
+    position: relative;
+}
+
+.input-container i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.input-container input {
+    width: 100%;
+    padding: 12px 15px 12px 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s;
+}
+
+.input-container input:focus {
+    outline: none;
+    border-color: #6e45e2;
+    box-shadow: 0 0 0 2px rgba(110, 69, 226, 0.3);
+}
+
+.suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(30, 30, 50, 0.95);
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: none;
+}
+
+.suggestion-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.suggestion-item:hover {
+    background: rgba(110, 69, 226, 0.3);
+}
+
+.suggestion-item img {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    border-radius: 4px;
+    object-fit: contain;
+    background: white;
+    padding: 1px;
+}
+
+.vs-circle {
+    width: 50px;
+    height: 50px;
+    background: rgba(110, 69, 226, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #6e45e2;
+    position: relative;
+}
+
+.vs-circle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -20px;
+    right: -20px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: -1;
+}
+
+#compare-btn {
+    padding: 12px 30px;
+    font-size: 16px;
+    margin-bottom: 30px;
+    transition: all 0.3s;
+}
+
+.glow-on-hover {
+    position: relative;
+    z-index: 0;
+}
+
+.glow-on-hover:hover {
+    color: #fff;
+}
+
+.glow-on-hover:before {
+    content: '';
+    background: linear-gradient(45deg, #6e45e2, #4cc9f0, #6e45e2, #4cc9f0);
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    background-size: 400%;
+    z-index: -1;
+    filter: blur(5px);
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
+    animation: glowing 20s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    border-radius: 20px;
+}
+
+.glow-on-hover:hover:before {
+    opacity: 1;
+}
+
+.glow-on-hover:after {
+    z-index: -1;
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #6e45e2;
+    left: 0;
+    top: 0;
+    border-radius: 20px;
+}
+
+@keyframes glowing {
+    0% { background-position: 0 0; }
+    50% { background-position: 400% 0; }
+    100% { background-position: 0 0; }
+}
+
+.comparison-results {
+    display: block !important;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    min-height: 50px;
+}
+
+.comparison-header-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.stock-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.stock-header h4 {
+    margin: 0;
+    font-size: 18px;
+    color: white;
+}
+
+.comparison-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.comparison-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.comparison-item h5 {
+    margin-bottom: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    text-transform: capitalize;
+}
+
+.comparison-item p {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0;
+    color: white;
+}
+
+.winner {
+    position: relative;
+    box-shadow: 0 0 0 2px rgba(76, 201, 240, 0.5);
+}
+
+.winner::after {
+    content: '✓ Winner';
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    background: #4cc9f0;
+    color: #1a1a2e;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.loading {
+    color: #555;
+    font-style: italic;
+    margin: 10px 0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@media (max-width: 768px) {
+    .comparison-inputs {
+        flex-direction: column;
+    }
+    
+    .vs-circle {
+        margin: 15px 0;
+    }
+    
+    .comparison-header-row, .comparison-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Add this to your comparison.css file */
+.formatted-text {
+    text-align: center;
+    color: white;
+    line-height: 1.6;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Make sure the comparison-results container has these properties */
+.comparison-results {
+    display: block !important;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    min-height: 50px;
+    opacity: 1;
+}
