@@ -1,0 +1,257 @@
+{% extends "index.html" %}
+
+{% block style %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/comparison.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Main Content -->
+<div class="main-content">
+    <!-- Comparison Section -->
+    <div id="comparison-section">
+        <h2><i class="fas fa-exchange-alt"></i> Stock Comparison</h2>
+
+        <div class="card comparison-card">
+            <div class="comparison-header">
+                <h3>Compare Stocks Side-by-Side</h3>
+                <p>Enter stock symbols to analyze their performance metrics</p>
+            </div>
+
+            <div class="comparison-inputs">
+                <div class="stock-input">
+                    <div class="input-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="stock1" placeholder="Enter first stock (e.g. AAPL)" autocomplete="off">
+                        <div class="suggestions" id="suggestions1"></div>
+                    </div>
+                </div>
+
+                <div class="vs-circle">
+                    <span>VS</span>
+                </div>
+
+                <div class="stock-input">
+                    <div class="input-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="stock2" placeholder="Enter second stock (e.g. MSFT)" autocomplete="off">
+                        <div class="suggestions" id="suggestions2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <button id="compare-btn" class="primary glow-on-hover">
+                <i class="fas fa-chart-bar"></i> Compare Stocks
+            </button>
+
+            <div class="comparison-results" id="comparison-results">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='scripts/main.js') }}"></script>
+<script>
+document.getElementById('compare-btn').addEventListener('click', async () => {
+    console.log('1. Compare button clicked');
+
+    const stock1 = document.getElementById('stock1').value.trim().toUpperCase();
+    const stock2 = document.getElementById('stock2').value.trim().toUpperCase();
+    console.log('2. Tickers:', stock1, stock2);
+
+    const resultDiv = document.getElementById('comparison-results');
+    if (!resultDiv) {
+        console.error('3. Error: comparison-results div not found');
+        alert('Error: Result container not found');
+        return;
+    }
+
+    if (!stock1 || !stock2) {
+        resultDiv.innerHTML = '<p class="error">Please enter both stock tickers!</p>';
+        console.log('3. Validation failed: Missing tickers');
+        return;
+    }
+
+    resultDiv.innerHTML = '<p class="loading">⏳ Comparing ' + stock1 + ' and ' + stock2 + '...</p>';
+    console.log('4. Sending POST to /compare with:', { ticker1: stock1, ticker2: stock2 });
+
+    try {
+        const response = await fetch('/compare', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticker1: stock1, ticker2: stock2 })
+        });
+        console.log('5. Response status:', response.status, response.ok);
+
+        const rawText = await response.text();
+        console.log('6. Raw response text:', rawText);
+
+        let data;
+        try {
+            data = JSON.parse(rawText);
+            console.log('7. Parsed JSON data:', data);
+        } catch (jsonErr) {
+            console.error('7. JSON parse error:', jsonErr.message);
+            resultDiv.innerHTML = '<p class="error">❌ Invalid server response: ' + rawText.slice(0, 100) + '...</p>';
+            return;
+        }
+
+        if (!response.ok) {
+            resultDiv.innerHTML = '<p class="error">❌ Error: ' + (data.error || 'Server error') + '</p>';
+            console.log('8. Backend error:', data.error);
+            return;
+        }
+
+        // Process the data and create the comparison UI
+        if (data.result) {
+            console.log('8. Processing result:', data.result);
+            
+            // Check if the result is a formatted string (current behavior) or an object (desired behavior)
+            if (typeof data.result === 'string') {
+                // Parse the string result into a structured format
+                const lines = data.result.trim().split('\n');
+                const parsedData = {};
+                let currentMetric = '';
+                
+                // First line might be "Comparison Results" - skip it
+                const startIndex = lines[0].includes("Comparison Results") ? 1 : 0;
+                
+                // Second line might be the tickers
+                if (lines[startIndex].includes(stock1) && lines[startIndex].includes(stock2)) {
+                    // Skip the header line
+                    for (let i = startIndex + 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        const parts = line.split(/\s+/);
+                        
+                        if (parts.length >= 3) {
+                            const metricName = parts.slice(0, parts.length - 2).join(' ');
+                            const value1 = parts[parts.length - 2];
+                            const value2 = parts[parts.length - 1];
+                            
+                            if (!parsedData[stock1]) parsedData[stock1] = {};
+                            if (!parsedData[stock2]) parsedData[stock2] = {};
+                            
+                            parsedData[stock1][metricName] = value1;
+                            parsedData[stock2][metricName] = value2;
+                        }
+                    }
+                } else {
+                    // If we can't parse it, just show the text
+                    resultDiv.innerHTML = '<div class="formatted-text">' + data.result.replace(/\n/g, '<br>') + '</div>';
+                    return;
+                }
+                
+                // Now we have structured data, render it properly
+                renderComparisonUI(parsedData, stock1, stock2, resultDiv);
+            } else if (typeof data.result === 'object') {
+                // We already have structured data
+                renderComparisonUI(data.result, stock1, stock2, resultDiv);
+            } else {
+                resultDiv.innerHTML = '<p class="error">Unexpected result format</p>';
+            }
+        } else {
+            resultDiv.innerHTML = '<p class="error">❌ No results returned from server</p>';
+            console.log('8. No result in response');
+        }
+    } catch (err) {
+        resultDiv.innerHTML = '<p class="error">❌ Error fetching data: ' + err.message + '</p>';
+        console.error('8. Fetch error:', err);
+    }
+});
+
+// Separate function to render the comparison UI
+function renderComparisonUI(data, stock1, stock2, resultDiv) {
+    const stock1Data = data[stock1] || data.ticker1 || {};
+    const stock2Data = data[stock2] || data.ticker2 || {};
+    
+    let output = '';
+    
+    // Header row with fancy styling
+    output += '<div class="comparison-header-row">';
+    output += '<div class="stock-header fade-in"><h4>' + stock1 + '</h4></div>';
+    output += '<div class="stock-header fade-in"><h4>' + stock2 + '</h4></div>';
+    output += '</div>';
+    
+    // Get all metrics from both stocks
+    const allMetrics = new Set([
+        ...Object.keys(stock1Data), 
+        ...Object.keys(stock2Data)
+    ]);
+    
+    // Define which metrics are better when higher
+    const higherBetterMetrics = [
+        'Price', 'ROA', 'ROE', 'Gross Margin', 'Operating Margin', 'Profit Margin', 
+        'Current Ratio', 'Market Cap', 'EPS', 'EPS (ttm)', 'EPS next 5Y', 
+        '52W Low', 'Insider Own', 'Inst Own'
+    ];
+    
+    // Define which metrics should be treated as percentages
+    const percentageMetrics = [
+        'ROA', 'ROE', 'Gross Margin', 'Operating Margin', 'Profit Margin',
+        'EPS next 5Y', 'Dividend %', 'SMA50', 'SMA200', '52W High', '52W Low',
+        'Insider Own', 'Insider Trans', 'Inst Own'
+    ];
+    
+    let delay = 0;
+    
+    // Create a row for each metric
+    allMetrics.forEach(metric => {
+        const val1 = stock1Data[metric] || 'N/A';
+        const val2 = stock2Data[metric] || 'N/A';
+        
+        // Determine which value is better
+        let class1 = 'comparison-item fade-in';
+        let class2 = 'comparison-item fade-in';
+        
+        if (val1 !== 'N/A' && val2 !== 'N/A' && !isNaN(parseFloat(val1)) && !isNaN(parseFloat(val2))) {
+            const v1 = parseFloat(val1);
+            const v2 = parseFloat(val2);
+            
+            // Check if this metric is better when higher
+            const higherBetter = higherBetterMetrics.some(m => 
+                metric.toLowerCase().includes(m.toLowerCase())
+            );
+            
+            if (higherBetter ? v1 > v2 : v1 < v2) {
+                class1 += ' winner';
+            } else if (higherBetter ? v2 > v1 : v2 < v1) {
+                class2 += ' winner';
+            }
+        }
+        
+        // Create the comparison row
+        output += '<div class="comparison-row">';
+        
+        // First stock column
+        output += '<div class="' + class1 + '" style="animation-delay:' + (delay * 0.05) + 's">';
+        output += '<h5>' + formatMetricName(metric) + '</h5>';
+        output += '<p>' + val1 + '</p>';
+        output += '</div>';
+        
+        // Second stock column
+        output += '<div class="' + class2 + '" style="animation-delay:' + (delay * 0.05) + 's">';
+        output += '<h5>' + formatMetricName(metric) + '</h5>';
+        output += '<p>' + val2 + '</p>';
+        output += '</div>';
+        
+        output += '</div>';
+        
+        delay++;
+    });
+    
+    resultDiv.innerHTML = output;
+    console.log('9. Results rendered with proper styling');
+}
+
+// Helper function to format metric names
+function formatMetricName(metric) {
+    return metric
+        .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+        .replace(/(\d+[a-zA-Z])/g, ' $1') // Add space before numbers followed by letters
+        .trim() // Remove extra spaces
+        .replace(/\b\w/g, c => c.toUpperCase()); // Capitalize first letter of each word
+}
+</script>
+{% endblock %}

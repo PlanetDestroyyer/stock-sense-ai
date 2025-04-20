@@ -10,6 +10,8 @@ from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.tools import Tool
 from typing import Optional, List
 import traceback
+from pydantic import ValidationError
+
 
 
 ask_yahoo_finance_news = YahooFinanceNewsTool()
@@ -33,17 +35,20 @@ parser = PydanticOutputParser(pydantic_object=Output)
 prompt_template = ChatPromptTemplate.from_messages(
     [
         ("system", """You are a financial assistant that answers questions about companies and markets. 
-        Use the provided tools to fetch accurate information.
+        Use the provided tools to fetch accurate, current information.
         
-        For leadership questions (e.g., CEO), prioritize 'ask_duckduckgo'.
-        For market-wide queries (e.g., top gainers or losers), use 'ask_duckduckgo'.
-        For ticker-specific queries, use 'stock_info', 'ticker_news', or 'ask_yahoo_finance_news'.
+        Guidelines:
+        - For leadership questions (e.g., CEO), prioritize 'ask_duckduckgo'.
+        - For market-wide queries (e.g., top gainers or losers), use 'ask_duckduckgo'.
+        - For ticker-specific queries, use 'stock_info', 'ticker_news', or 'ask_yahoo_finance_news'.
+        - Always use at least one tool to gather information.
+        - Never return generic or template responses.
+        - Summarize tool outputs clearly in the 'response' and 'summary' fields.
+        - Include relevant links and sources from tool outputs in the 'links' and 'source' fields.
+        - If no links or sources are available, use empty lists (`[]`).
+        - If no specific topic is identified, use a relevant default based on the query.
         
-        Always provide detailed, specific information based on current data.
-        Never return generic template responses.
-        Always use at least one tool to gather information before responding.
-        
-        Wrap your final output in the format specified by the format instructions.
+        Return your final output as a JSON object matching the format below. Ensure all fields are populated, using defaults where necessary.
 
         {format_instruction}"""),
         ("human", "Answer the query directly and concisely based on current data. If a stock ticker is provided, fetch news or details as requested: {input}"),
@@ -91,71 +96,115 @@ agent_executor = AgentExecutor(
     handle_parsing_errors=True,  # Better error handling
 )
 
-# Process agent output
+
 def process_agent_output(raw_response):
     try:
         print(f"Processing raw response: {raw_response}")
         
-        # If raw_response is already a dictionary with Output structure
-        if isinstance(raw_response, dict) and "output" in raw_response:
-            try:
-                # Try to parse the structured output
-                if isinstance(raw_response["output"], str):
-                    return parser.parse(raw_response["output"])
-                # If output is already a dict, convert to Output model
-                elif isinstance(raw_response["output"], dict):
-                    return Output(**raw_response["output"])
-            except Exception as parsing_error:
-                print(f"Error parsing output: {parsing_error}")
-                print(traceback.format_exc())
-                
-                # Return a simplified Output with the raw response
-                return Output(
-                    topic="Stock Analysis",
-                    source=["Agent Analysis"],
-                    tools_used=[],
-                    response=str(raw_response["output"]),
-                    links=None,
-                    summary="Analysis completed with parsing issues."
-                )
-        
-        # If we have intermediate_steps, extract tool usage
+        # Initialize default Output object
+        default_output = Output(
+            topic="Stock Analysis",
+            source=[],
+            tools_used=[],
+            response="",
+            links=[],
+            summary="Analysis completed based on available data.",
+            agent_scratchpad=None
+        )
+
+        # Extract tools used from intermediate_steps
         tools_used = []
-        if "intermediate_steps" in raw_response:
-            for step in raw_response["intermediate_steps"]:
+        tool_outputs = []
+        if isinstance(raw_response, dict) and "intermediate_steps" in raw_response:
+            for step in raw_response.get("intermediate_steps", []):
                 if len(step) >= 2 and hasattr(step[0], "tool"):
                     tools_used.append(step[0].tool)
-        
-        # Handle different response formats
-        if "output" in raw_response:
-            response_text = raw_response["output"]
-        elif "response" in raw_response:
-            response_text = raw_response["response"]
+                    # Extract tool output (e.g., links, text)
+                    tool_output = step[1] if len(step) > 1 else None
+                    if tool_output:
+                        tool_outputs.append(tool_output)
+
+        # Case 1: Output is a JSON string
+        if isinstance(raw_response, dict) and "output" in raw_response:
+            output = raw_response["output"]
+            if isinstance(output, str):
+                try:
+                    # Try parsing as JSON
+                    if output.strip().startswith('```json'):
+                        output = output.replace('```json', '').replace('```', '').strip()
+                    parsed_output = parser.parse(output)
+                    # Update defaults with parsed values
+                    default_output = parsed_output
+                    default_output.tools_used = tools_used or default_output.tools_used
+                    default_output.source = default_output.source or [t for t in tools_used]
+                    return default_output
+                except ValidationError as ve:
+                    print(f"Pydantic validation error: {ve}")
+                    default_output.response = output
+                    default_output.error = f"Invalid output format: {str(ve)}"
+                except json.JSONDecodeError as je:
+                    print(f"JSON decode error: {je}")
+                    default_output.response = output
+                    default_output.error = f"Failed to parse JSON: {str(je)}"
+            elif isinstance(output, dict):
+                # Case 2: Output is a dictionary
+                try:
+                    parsed_output = Output(**output)
+                    default_output = parsed_output
+                    default_output.tools_used = tools_used or default_output.tools_used
+                    default_output.source = default_output.source or [t for t in tools_used]
+                    return default_output
+                except ValidationError as ve:
+                    print(f"Pydantic validation error for dict: {ve}")
+                    default_output.response = str(output)
+                    default_output.error = f"Invalid output structure: {str(ve)}"
+            else:
+                # Case 3: Output is neither string nor dict
+                default_output.response = str(output)
         else:
-            response_text = str(raw_response)
-            
-        # Create a clean Output object
-        return Output(
-            topic="Stock Analysis",
-            source=["Financial Data Tools"],
-            tools_used=tools_used,
-            response=response_text,
-            links=None,
-            summary="Analysis completed based on available market data."
-        )
-    
+            # Case 4: No valid output key
+            default_output.response = str(raw_response)
+
+        # Extract links and sources from tool outputs
+        for tool_output in tool_outputs:
+            if isinstance(tool_output, dict):
+                if "links" in tool_output:
+                    default_output.links.extend(tool_output.get("links", []))
+                if "source" in tool_output:
+                    default_output.source.extend(tool_output.get("source", []))
+            elif isinstance(tool_output, str):
+                # Extract URLs from text (basic regex for simplicity)
+                import re
+                urls = re.findall(r'https?://[^\s<>"]+|www\.[^\s<>"]+', tool_output)
+                default_output.links.extend(urls)
+
+        # Generate summary if none provided
+        if not default_output.summary and default_output.response:
+            default_output.summary = default_output.response[:100] + "..." if len(default_output.response) > 100 else default_output.response
+
+        # Ensure tools_used and source are populated
+        default_output.tools_used = tools_used or default_output.tools_used
+        default_output.source = default_output.source or [t for t in tools_used]
+
+        # Clean up: Remove duplicates and None values
+        default_output.links = list(set([l for l in default_output.links if l]))
+        default_output.source = list(set([s for s in default_output.source if s]))
+        default_output.tools_used = list(set([t for t in default_output.tools_used if t]))
+
+        return default_output
+
     except Exception as e:
         print(f"Error in process_agent_output: {e}")
         print(traceback.format_exc())
         return Output(
             topic="Error",
-            source=["Agent"],
-            tools_used=None,
+            source=[],
+            tools_used=[],
             response=f"An error occurred while processing the response: {str(e)}",
-            links=None,
-            summary="Error during response processing."
+            links=[],
+            summary="Error during response processing.",
+            agent_scratchpad=None
         )
-
 # Main execution for testing
 if __name__ == "__main__":
     try:
