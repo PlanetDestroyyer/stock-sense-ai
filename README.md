@@ -1,40 +1,74 @@
-# 📈 StockSense AI
 
-StockSense AI is a smart, intuitive web-based stock market assistant that helps you visualize stock trends, track market movers, explore financial news, and interact with an AI-powered assistant for intelligent insights.
+📈 StockSense AI
 
----
-
-## 🚀 Features
-
-### 1. 📊 **Dashboard**
-- Displays an interactive stock price graph of **Apple Inc. (AAPL)**.
-- Visualizes daily price changes to help you track trends easily.
-
-### 2. 📈 **Top Movers**
-- View the **Top Gainers** and **Top Losers** of the day.
-- Stay updated on market volatility and fast-moving stocks.
-
-### 3. 📰 **Stock News**
-- Search for any stock ticker (e.g., `TSLA`, `GOOG`) and get the **latest news headlines** and **current price**.
-- Source verified and reliable market articles for your ticker queries.
-
-### 4. 🧠 **AI Assistant**
-- Ask natural language questions like:
-  - _"Why is Tesla down today?"_
-  - _"What is Apple's P/E ratio?"_
-- The AI assistant will fetch and summarize relevant data such as price changes, financial metrics, and news-based reasons behind stock movements.
-
----
-
-## 🛠️ Tech Stack
-
-- **Backend:** Flask (Python)
-- **Frontend:** HTML, CSS, JavaScript, Bootstrap
-- **Data Sources:**
-  - Yahoo Finance (via `yfinance`, `finviz`, or APIs)
-  - News APIs for financial headlines
-  - AI Agent using LLM (LangChain or custom executor)
+Your smart stock market companion.
+StockSense AI is a web-based assistant that helps you visualize trends, track market movers, dive into financial news, and ask an AI questions about the stock market—all in one place.
 
 
 ---
+
+🚀 Key Features
+
+1. 📊 Dashboard
+
+Interactive stock graph for Apple Inc. (AAPL)
+
+Visualizes daily price movements and trends
+
+Clean, easy-to-read UI with real-time data
+
+
+2. 📈 Top Movers
+
+See the day’s Top Gainers and Top Losers
+
+Stay informed on volatile or trending stocks
+
+
+3. 📰 Stock News
+
+Search any stock ticker (e.g., TSLA, GOOG)
+
+Get latest headlines and real-time price
+
+Curated from verified and trustworthy sources
+
+
+4. 🧠 AI Assistant
+
+Ask natural language questions like:
+
+“Why is Tesla down today?”
+
+“What is Apple’s P/E ratio?”
+
+
+AI fetches real-time data, explains movements, and summarizes insights
+
+Powered by a custom LangChain-based LLM agent
+
+
+5. ⚖️ Stock Comparison Page
+
+Compare two stocks side by side
+
+Visual and metric-based comparison to see the stronger performer
+
+
+
+---
+
+🛠️ Tech Stack
+
+Frontend: HTML, CSS, JavaScript, Bootstrap
+
+Backend: Flask (Python)
+
+Data Sources:
+
+yfinance / Finviz APIs
+
+News APIs (financial headlines)
+
+AI powered by LangChain and Groq
 
