@@ -22,6 +22,8 @@ from datetime import datetime, timedelta
 import json
 import logging
 from typing import Dict, Any
+import json
+
 
 load_dotenv()
 
@@ -178,22 +180,21 @@ def assistant():
             logging.info(f"Raw agent response: {raw_response}")
 
             # Process the response
-            response = raw_response
+            print(f"Raw response type: {type(raw_response)}")
+            print(raw_response)
             
-            # Validate response schema
-            required_fields = ["topic", "response", "summary", "tools_used", "links", "source"]
-            for field in required_fields:
-                if field not in response:
-                    response[field] = [] if field in ["tools_used", "links", "source"] else ""
+           
+            response =  json.loads(raw_response['output'])
+
             
-            # Prepare standardized response format
             response_data = {
                 "topic": response["topic"],
                 "response": response["response"],
                 "summary": response["summary"],
                 "tools_used": response["tools_used"],
                 "links": response["links"],
-                "source": response["source"]
+                "source": response["source"],
+                "agent_scratchpad": response["agent_scratchpad"]
             }
 
             # Add debugging info in development
