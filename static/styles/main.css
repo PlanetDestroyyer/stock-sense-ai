@@ -161,13 +161,13 @@ body {
     width: 100%;
     overflow: hidden;
     position: relative;
-    height: 30px; /* Adjust based on your design */
+    height: 40px; /* Adjust based on your design */
     background: rgba(110, 69, 226, 0.3); /* Light background for visibility */
     padding: 5px 0;
 }
 
 /* Style for individual news items */
-.news-item {
+.news-item-news {
     display: inline-block;
     margin-right: 20px; /* Space between news items */
     font-size: 14px; /* Adjust for readability */
