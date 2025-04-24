@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+from finvizfinance.screener.overview import Overview
 import logging
 import traceback
 from typing import Dict, Any
@@ -7,7 +8,7 @@ from flask_cors import CORS
 from codes.main import agent_executor, process_agent_output
 from codes.yahoo_finance_helper import ask_yahoo_finance_news
 from codes.ticker_info import ticker_news
-from codes.topMovers import get_top_gainers, get_top_losers
+from codes.topMovers import get_top_losers, get_new_top_gainers
 from codes.compare_stocks import compare_stocks
 import requests
 import pandas as pd
@@ -16,10 +17,12 @@ import logging
 import os
 import traceback
 from dotenv import load_dotenv
+import yfinance as yf
+from datetime import datetime, timedelta
 
 load_dotenv()
 
-ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
+NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 # Initialize Flask app
 app = Flask(__name__, static_url_path='/static')
 Compress(app)
@@ -29,88 +32,126 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Alpha Vantage API Key
- # Replace with a valid key
 
-# Base URL for Alpha Vantage API
-BASE_URL = 'https://www.alphavantage.co/query'
 
-# Function to get stock data for AAPL
-def get_valid_data():
-    ticker = "AAPL"
-    params = {
-        'function': 'TIME_SERIES_INTRADAY',
-        'symbol': ticker,
-        'interval': '5min',
-        'outputsize': 'compact',
-        'datatype': 'json',
-        'apikey': ALPHA_VANTAGE_API_KEY
-    }
-    
+def get_valid_data(ticker):
     try:
-        response = requests.get(BASE_URL, params=params)
+        stock = yf.Ticker(ticker)
+        df = stock.history(period="1d", interval="5m")
+        if df.empty:
+            print(f"No data returned for ticker {ticker}")
+            return None
+        df.index = pd.to_datetime(df.index)
+        df = df[['Close']].round(2)
+        return df
+    except Exception as e:
+        print(f"Error fetching data for ticker {ticker}: {e}")
+        return None
+
+def get_top_gainers():
+    try:
+        screener = Overview()
+        # Set filter for significant gainers (adjust threshold if needed)
+        screener.set_filter(filters_dict={'Change': 'Up 20%'})
+        df = screener.screener_view()
+        if df.empty:
+            print("No gainers found from Finviz")
+            return []
+        # Sort by Change and take top 4
+        top_gainers = df.sort_values(by='Change', ascending=False).head(3)
+        gainers = []
+        for _, row in top_gainers.iterrows():
+            ticker = row['Ticker']
+            # Fetch volume from yfinance for consistency
+            try:
+                stock = yf.Ticker(ticker)
+                data = stock.history(period="1d")
+                volume = f'{int(data["Volume"][-1] / 1_000_000)}M' if not data.empty else 'N/A'
+            except:
+                volume = 'N/A'
+            gainers.append({
+                'Ticker': ticker,
+                'Change': f'+{row["Change"]:.2f}%' if isinstance(row["Change"], (int, float)) else row["Change"],
+                'Company': row['Company'],
+                'Volume': volume
+            })
+        return gainers
+    except Exception as e:
+        print(f"Error fetching gainers from Finviz: {e}")
+        return []
+
+def get_market_news():
+    try:
+        url = f"https://newsapi.org/v2/everything?q=stock%20market%20OR%20finance&apiKey={NEWS_API_KEY}&language=en&sortBy=publishedAt&pageSize=5"
+        response = requests.get(url)
         response.raise_for_status()
         data = response.json()
-        
-        if 'Error Message' in data:
-            logger.error(f"API error for ticker {ticker}: {data['Error Message']}")
-            return None
-        if 'Information' in data and 'Thank you for using Alpha Vantage' in data['Information']:
-            logger.error(f"Rate limit or key issue for ticker {ticker}: {data['Information']}")
-            return None
-        
-        time_series_key = "Time Series (5min)"
-        if time_series_key not in data:
-            logger.error(f"No time series data for ticker {ticker}. Full response: {data}")
-            return None
-        
-        df = pd.DataFrame.from_dict(data[time_series_key], orient='index')
-        df.index = pd.to_datetime(df.index)
-        df = df.astype(float)
-        return df
-    
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Request error for ticker {ticker}: {e}")
-        return None
-    except ValueError as e:
-        logger.error(f"JSON decode error for ticker {ticker}: {e}")
-        return None
+        if data.get('status') != 'ok':
+            print(f"NewsAPI error: {data.get('message')}")
+            return []
+        articles = data.get('articles', [])
+        news = [
+            {
+                'title': article['title'],
+                'source': article['source']['name'],
+                'description': article['description'] or '',
+                'url': article['url']
+            }
+            for article in articles
+        ]
+        return news
     except Exception as e:
-        logger.error(f"Unexpected error for ticker {ticker}: {e}")
-        return None
-
-@app.route('/')
-def index():
-    gainers = get_top_gainers()
-    return render_template("index.html",gainers=gainers.to_dict(orient='records'))
+        print(f"Error fetching news: {e}")
+        # Fallback mock news
+        # "No news available at the moment."
 
 @app.route('/api/market-data')
 def get_market_data():
-    data = get_valid_data()
-    
-    if data is None or data.empty:
-        return jsonify({"error": "No data available for AAPL"}), 500
-    
-    labels = [timestamp.strftime("%H:%M") for timestamp in data.index]
-    prices = data["4. close"].round(2).tolist()
+    indices = [
+        {'ticker': '^GSPC', 'name': 'S&P 500'},
+        {'ticker': '^IXIC', 'name': 'NASDAQ'},
+        {'ticker': '^DJI', 'name': 'Dow Jones'}
+    ]
+    result = {
+        'labels': [],
+        'datasets': [],
+        'current_prices': []
+    }
+    for index in indices:
+        data = get_valid_data(index['ticker'])
+        if data is None or data.empty:
+            return jsonify({"error": f"No data available for {index['name']}"}), 500
+        if not result['labels']:
+            result['labels'] = [timestamp.strftime("%H:%M") for timestamp in data.index]
+        prices = data["Close"].tolist()
+        current_price = data["Close"].iloc[-1]
+        result['datasets'].append({
+            'name': index['name'],
+            'prices': prices
+        })
+        result['current_prices'].append({
+            'name': index['name'],
+            'price': current_price
+        })
+    return jsonify(result)
 
-    return jsonify({
-        "labels": labels,
-        "prices": prices,
-        "ticker": "AAPL"
-    })
+@app.route('/')
+def dashboard():
+    gainers = get_top_gainers()
+    news = get_market_news()
+    return render_template('index.html', gainers=gainers, news=news)
+
+
 
 @app.route('/top_movers')
 def movers():
-    gainers = get_top_gainers()
+    gainers = get_new_top_gainers()
     losers = get_top_losers()
     return render_template(
         "top-movers.html", 
         gainers=gainers.to_dict(orient='records'), 
         losers=losers.to_dict(orient='records')
     )
-
-
 
 
 

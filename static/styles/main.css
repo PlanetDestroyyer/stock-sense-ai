@@ -13,6 +13,39 @@ body {
     min-height: 100vh;
 }
 
+
+#chartContainer {
+    max-width: 800px;
+    margin: 1rem ;
+    background: #16213e;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+#priceContainer {
+    max-width: 800px;
+    margin: 1rem ;
+    background: #16213e;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+}
+.price-item {
+    flex: 1;
+}
+.price-item h4 {
+    margin: 0;
+    color: #333;
+}
+.price-item p {
+    margin: 5px 0 0;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
 /* Layout */
 .container {
     display: flex;

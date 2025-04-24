@@ -1,7 +1,7 @@
 from finvizfinance.screener.overview import Overview
 import pandas as pd
 
-def get_top_gainers():
+def get_new_top_gainers():
     """Fetches top 10 gainers from Finviz."""
     try:
     
@@ -12,7 +12,7 @@ def get_top_gainers():
         
         # Get data and sort by % change (descending)
         df = screener.screener_view()
-        top_gainers = df.sort_values(by='Change', ascending=False).head(10)
+        top_gainers = df.sort_values(by='Change', ascending=False).head(5)
         
         return top_gainers
     
@@ -31,7 +31,7 @@ def get_top_losers():
         
         # Get data and sort by % change (ascending)
         df = screener.screener_view()
-        top_losers = df.sort_values(by='Change', ascending=True).head(10)
+        top_losers = df.sort_values(by='Change', ascending=True).head(5)
         
         return top_losers
     
@@ -51,7 +51,7 @@ def format_movers(gainers, losers):
 
 # Example Usage
 if __name__ == "__main__":
-    gainers = get_top_gainers()
+    gainers = get_new_top_gainers()
     losers = get_top_losers()
     print(gainers)
     print(losers)

@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     {% block style %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,10 +9,175 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/static/styles/main.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #1e293b;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        h2 {
+            color: #e2e8f0;
+            margin-bottom: 20px;
+        }
+        #dashboard-section {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .dashboard-flex {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .chart-column {
+            flex: 1;
+            min-width: 300px;
+        }
+        #chartContainer {
+            max-width: 800px;
+            margin: 1rem;
+            background: #16213e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #priceContainer {
+            max-width: 800px;
+            margin: 1rem;
+            background: #16213e;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        .price-item h4 {
+            margin: 0;
+            color: #e2e8f0;
+        }
+        .price-item p {
+            margin: 5px 0 0;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #22d3ee;
+        }
+        .movers-column {
+            flex: 1;
+            min-width: 300px;
+            /* margin: 1rem 0 0 0; */
+        }
+        .card {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin: 1rem;
+        }
+        .card-header h3 {
+            margin: 0;
+            color: #e2e8f0;
+        }
+        .gainers h4 {
+            color: #22c55e;
+            margin: 1rem 0 7px 2px;
+        }
+        .stock-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e293b;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .stock-card h4 {
+            margin: 0;
+            color: #e2e8f0;
+        }
+        .stock-card p {
+            margin: 5px 0;
+            color: #94a3b8;
+        }
+        .stock-card small {
+            color: #64748b;
+        }
+        .up {
+            color: #22c55e;
+            font-size: 0.9em;
+        }
+        .analyze-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .analyze-btn:hover {
+            background: #2563eb;
+        }
+        .news-section {
+            margin: 1rem;
+            background: #16213e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .news-section h3 {
+            color: #e2e8f0;
+            margin: 0 0 20px;
+        }
+        .news-item {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .news-item h4 {
+            margin: 0 0 5px;
+            color: #e2e8f0;
+        }
+        .news-item p {
+            margin: 0 0 10px;
+            color: #94a3b8;
+            font-size: 0.9em;
+        }
+        .news-item a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .news-item a:hover {
+            text-decoration: underline;
+        }
+        .news-item small {
+            color: #64748b;
+        }
+        @media (max-width: 768px) {
+            .dashboard-flex {
+                flex-direction: column;
+            }
+        }
+    </style>
     {% endblock %}
 </head>
 <body>
-    
     <div class="container">
         <!-- Sidebar -->
         <div class="sidebar">
@@ -38,6 +201,7 @@
                 <a href="/comparison" id="comparison-link">
                     <i class="fas fa-exchange-alt"></i>
                     <span>Comparison</span>
+                </a>
                 <a href="/ai_assistant" id="assistant-link">
                     <i class="fas fa-robot"></i>
                     <span>AI Assistant</span>
@@ -50,105 +214,159 @@
             <!-- Dashboard Section -->
             <div id="dashboard-section">
                 <h2><i class="fas fa-chart-line"></i> Market Dashboard</h2>
-                
-                <!-- Market Overview -->
-                <div id="chartContainer">
-                    <canvas id="stockChart"></canvas>
-                </div>
-            
-                <!-- Load Chart.js from CDN -->
-                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-                <script>
-                    // Fetch data from the API
-                    fetch('/api/market-data')
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.error) {
-                                alert(data.error);
-                                return;
-                            }
-            
-                            // Create the chart
-                            const ctx = document.getElementById('stockChart').getContext('2d');
-                            new Chart(ctx, {
-                                type: 'line',
-                                data: {
-                                    labels: data.labels,
-                                    datasets: [{
-                                        label: 'AAPL Closing Price ($)',
-                                        data: data.prices,
-                                        borderColor: 'blue',
-                                        fill: false,
-                                        tension: 0.1
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    scales: {
-                                        x: {
-                                            title: {
-                                                display: true,
-                                                text: 'Time (HH:MM)'
-                                            }
-                                        },
-                                        y: {
-                                            title: {
-                                                display: true,
-                                                text: 'Price (USD)'
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        })
-                        .catch(error => {
-                            console.error('Error fetching data:', error);
-                            alert('Failed to load stock data. Please try again later.');
-                        });
-                </script>
-                
-                <!-- Top Movers -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 >Top Movers </h3>
-                    </div>
-                    <div class="movers-column gainers">
-                        <h4 style="color: green;
-                        margin:
-                      2rem 0 35px 2px;"><i class="fas fa-arrow-up" ></i> Top Gainers</h4>
-                        {% for stock in gainers %}
-                        <div class="stock-card">
-                          <div style="flex:1">
-                            <h4>{{ stock['Ticker'] }} <span class="up">{{ stock['Change'] }}</span></h4>
-                            <p>{{ stock['Company'] }}</p>
-                            <small>Volume: {{ stock['Volume'] }}</small>
-                          </div>
-                          <form action="{{ url_for('news') }}" method="POST">
-                            <input type="hidden" name="query" value="{{ stock['Ticker'] }}">
-                            <button class="analyze-btn" type="submit">Analyze</button>
-                          </form>
+                <div class="dashboard-flex">
+                    <!-- Chart and Prices Column -->
+                    <div class="chart-column">
+                        <div id="chartContainer">
+                            <canvas id="stockChart"></canvas>
                         </div>
-                        {% endfor %}
-                        
+                        <div id="priceContainer">
+                            <!-- Prices will be populated by JavaScript -->
+                        </div>
                     </div>
-
-                    
-
-                    
-
+                    <!-- Top Movers Column -->
+                    <div class="movers-column">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Top Movers</h3>
+                            </div>
+                            <div class="gainers">
+                                <h4><i class="fas fa-arrow-up"></i> Top Gainers</h4>
+                                {% for stock in gainers %}
+                                <div class="stock-card">
+                                    <div style="flex:1">
+                                        <h4>{{ stock['Ticker'] }} <span class="up">{{ stock['Change'] }}</span></h4>
+                                        <p>{{ stock['Company'] }}</p>
+                                        <small>Volume: {{ stock['Volume'] }}</small>
+                                    </div>
+                                    <form action="{{ url_for('news') }}" method="POST">
+                                        <input type="hidden" name="query" value="{{ stock['Ticker'] }}">
+                                        <button class="analyze-btn" type="submit">Analyze</button>
+                                    </form>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- News Section -->
+                <div class="news-section">
+                    <h3><i class="fas fa-newspaper"></i> Top Market News</h3>
+                    {% for article in news %}
+                    <div class="news-item">
+                        <h4>{{ article['title'] }}</h4>
+                        <p>{{ article['description'] }}</p>
+                        <small>Source: {{ article['source'] }}</small>
+                        <br>
+                        <a href="{{ article['url'] }}" target="_blank">Read More</a>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
+        {% endblock %}
     </div>
 
+    <!-- Chart.js and Data Fetching -->
+    <script>
+        // Fetch data from the API
+        fetch('/api/market-data')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Create the chart
+                const ctx = document.getElementById('stockChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: 'S&P 500',
+                                data: data.datasets[0].prices,
+                                borderColor: '#3b82f6',
+                                fill: false,
+                                tension: 0.1
+                            },
+                            {
+                                label: 'NASDAQ',
+                                data: data.datasets[1].prices,
+                                borderColor: '#22c55e',
+                                fill: false,
+                                tension: 0.1
+                            },
+                            {
+                                label: 'Dow Jones',
+                                data: data.datasets[2].prices,
+                                borderColor: '#ef4444',
+                                fill: false,
+                                tension: 0.1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Time (HH:MM)',
+                                    color: '#e2e8f0'
+                                },
+                                ticks: {
+                                    color: '#e2e8f0'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Index Value',
+                                    color: '#e2e8f0'
+                                },
+                                ticks: {
+                                    color: '#e2e8f0'
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Major Market Indices (5-min Intraday)',
+                                color: '#e2e8f0'
+                            },
+                            legend: {
+                                labels: {
+                                    color: '#e2e8f0'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Populate the price container
+                const priceContainer = document.getElementById('priceContainer');
+                priceContainer.innerHTML = data.current_prices.map(price => `
+                    <div class="price-item">
+                        <h4>${price.name}</h4>
+                        <p>${price.price.toFixed(2)}</p>
+                    </div>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                // alert('Failed to load market data. Please try again later.');
+            });
+    </script>
     <script src="static/scripts/chart.js"></script>
     <script src="static/scripts/main.js"></script>
-
-    {% endblock %}
 </body>
 </html>
