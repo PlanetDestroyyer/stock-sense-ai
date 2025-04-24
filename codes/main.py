@@ -35,23 +35,21 @@ parser = PydanticOutputParser(pydantic_object=Output)
 prompt_template = ChatPromptTemplate.from_messages(
     [
         ("system", """You are a financial assistant that answers questions about companies and markets. 
-        Use the provided tools to fetch accurate, current information.
-        
+        You MUST use the provided tools to fetch accurate, current information for EVERY query. Do NOT rely on your internal knowledge or generate answers without calling at least one tool.
+
         Guidelines:
-        - For leadership questions (e.g., CEO), prioritize 'ask_duckduckgo'.
+        - For leadership questions (e.g., CEO), use 'ask_duckduckgo'.
         - For market-wide queries (e.g., top gainers or losers), use 'ask_duckduckgo'.
         - For ticker-specific queries, use 'stock_info', 'ticker_news', or 'ask_yahoo_finance_news'.
-        - Always use at least one tool to gather information.
-        - Never return generic or template responses.
+        - Always call at least one tool to gather data before responding.
         - Summarize tool outputs clearly in the 'response' and 'summary' fields.
         - Include relevant links and sources from tool outputs in the 'links' and 'source' fields.
         - If no links or sources are available, use empty lists (`[]`).
         - If no specific topic is identified, use a relevant default based on the query.
-        
-        Return your final output as a JSON object matching the format below. Ensure all fields are populated, using defaults where necessary.
+        - Format your final output as a JSON object matching the structure below.
 
         {format_instruction}"""),
-        ("human", "Answer the query directly and concisely based on current data. If a stock ticker is provided, fetch news or details as requested: {input}"),
+        ("human", "Answer the query by using the appropriate tools to fetch current data: {input}"),
         ("placeholder", "{agent_scratchpad}"),
     ]
 ).partial(format_instruction=parser.get_format_instructions())
