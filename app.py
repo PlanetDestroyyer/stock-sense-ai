@@ -5,7 +5,7 @@ import traceback
 from typing import Dict, Any
 from flask_compress import Compress
 from flask_cors import CORS
-from codes.main import agent_executor, process_agent_output
+from codes.main import agent_executor
 from codes.yahoo_finance_helper import ask_yahoo_finance_news
 from codes.ticker_info import ticker_news
 from codes.topMovers import get_top_losers, get_new_top_gainers
@@ -19,6 +19,9 @@ import traceback
 from dotenv import load_dotenv
 import yfinance as yf
 from datetime import datetime, timedelta
+import json
+import logging
+from typing import Dict, Any
 
 load_dotenv()
 
@@ -175,7 +178,7 @@ def assistant():
             logging.info(f"Raw agent response: {raw_response}")
 
             # Process the response
-            response = process_agent_output(raw_response)
+            response = raw_response
             
             # Validate response schema
             required_fields = ["topic", "response", "summary", "tools_used", "links", "source"]
@@ -193,6 +196,13 @@ def assistant():
                 "source": response["source"]
             }
 
+            # Add debugging info in development
+            if app.debug:
+                response_data["_debug"] = {
+                    "raw_response_type": type(raw_response).__name__,
+                    "raw_response_keys": list(raw_response.keys()) if isinstance(raw_response, dict) else None
+                }
+
             return jsonify({
                 "response": response_data,
                 "query": query
@@ -208,90 +218,6 @@ def assistant():
     # GET request - show empty chat interface
     return render_template("ai-assistant.html")
 
-import json
-import logging
-from typing import Dict, Any
-
-def process_agent_output(raw_response: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Process the raw response from the AI agent into a structured format.
-    Ensures consistent output schema with default values for missing fields.
-    """
-    try:
-        # Initialize default response structure
-        processed_response = {
-            "topic": "General",
-            "response": "",
-            "summary": "",
-            "tools_used": [],
-            "links": [],
-            "source": []
-        }
-
-        # Case 1: JSON-formatted output
-        if isinstance(raw_response, dict) and 'output' in raw_response:
-            output = raw_response['output']
-            if isinstance(output, str) and output.strip().startswith('```json'):
-                # Strip markdown and parse JSON
-                json_str = output.replace('```json', '').replace('```', '').strip()
-                try:
-                    json_data = json.loads(json_str)
-                    # Update processed_response with JSON data
-                    processed_response.update({
-                        "topic": json_data.get("topic", "General"),
-                        "response": json_data.get("response", ""),
-                        "summary": json_data.get("summary", ""),
-                        "tools_used": json_data.get("tools_used", []),
-                        "links": json_data.get("links", []),
-                        "source": json_data.get("source", [])
-                    })
-                    return processed_response
-                except json.JSONDecodeError as e:
-                    logging.error(f"Failed to parse JSON output: {str(e)}")
-                    processed_response["response"] = output
-                    processed_response["error"] = "Invalid JSON format in agent output"
-            else:
-                # Non-JSON output
-                processed_response["response"] = str(output)
-        else:
-            # Case 2: Raw response is not a dict or lacks 'output'
-            processed_response["response"] = str(raw_response)
-
-        # Extract metadata if present (e.g., from agent_scratchpad)
-        if isinstance(raw_response, dict):
-            metadata = raw_response.get('metadata', {})
-            processed_response.update({
-                "topic": metadata.get("topic", processed_response["topic"]),
-                "summary": metadata.get("summary", processed_response["summary"]),
-                "tools_used": metadata.get("tools_used", processed_response["tools_used"]),
-                "links": metadata.get("links", processed_response["links"]),
-                "source": metadata.get("source", processed_response["source"])
-            })
-
-        # Clean up: Remove null or empty lists, ensure types
-        for key in ["tools_used", "links", "source"]:
-            if not processed_response[key]:
-                processed_response[key] = []
-            elif not isinstance(processed_response[key], list):
-                processed_response[key] = [processed_response[key]]
-
-        # Generate a summary if none provided
-        if not processed_response["summary"] and processed_response["response"]:
-            processed_response["summary"] = processed_response["response"][:100] + "..." if len(processed_response["response"]) > 100 else processed_response["response"]
-
-        return processed_response
-
-    except Exception as e:
-        logging.error(f"Error processing agent output: {str(e)}")
-        return {
-            "topic": "Error",
-            "response": str(raw_response),
-            "summary": "Failed to process response",
-            "tools_used": [],
-            "links": [],
-            "source": [],
-            "error": f"Processing error: {str(e)}"
-        }
 
 
 

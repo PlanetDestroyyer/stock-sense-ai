@@ -14,6 +14,27 @@ body {
 }
 
 
+
+
+.analyzing-text {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    color: #555;
+    padding: 10px;
+}
+
+.analyzing-text span {
+    display: inline-block;
+}
+
+.ellipsis {
+    min-width: 24px;
+    margin-left: 2px;
+    text-align: left;
+}
+
+
 #chartContainer {
     max-width: 800px;
     margin: 1rem ;

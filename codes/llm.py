@@ -9,7 +9,7 @@ load_dotenv()
 os.environ['GROQ_API_KEY'] = os.getenv("GROQ_API_KEY")
 
 llm = ChatGroq(
-    model="gemma2-9b-it",
+    model="llama-3.3-70b-versatile",
     temperature=0,
     max_tokens=None,
     timeout=None,

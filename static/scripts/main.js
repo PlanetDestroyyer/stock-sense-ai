@@ -1,143 +1,211 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Time filter buttons
-    document.querySelectorAll('.time-filter button').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelector('.time-filter button.active').classList.remove('active');
-            this.classList.add('active');
-            
-            // In a real app, this would update the chart time frame
-            alert(`Loading ${this.dataset.time} data...`);
-        });
-    });
-
-    // Stock analysis buttons
-    document.querySelectorAll('.analyze-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const stock = this.dataset.stock;
-            alert(`Analyzing ${stock}... Showing detailed analysis.`);
-            // In a real app, this would show a detailed analysis
-        });
-    });
-
-    // Show chart buttons
-    document.querySelectorAll('.show-chart').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const stock = this.dataset.stock;
-            alert(`Showing detailed chart for ${stock}`);
-            // In a real app, this would show a detailed chart
-        });
-    });
-
-    // Read news buttons
-    document.querySelectorAll('.read-news').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const news = this.dataset.news;
-            alert(`Showing news: ${news}`);
-            // In a real app, this would show the news article
-        });
-    });
-
-    // AI Chat functionality
-    document.getElementById('send-btn').addEventListener('click', sendMessage);
-    document.getElementById('chat-input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendMessage();
-    });
-
-    function sendMessage() {
-        const input = document.getElementById('chat-input');
-        const message = input.value.trim();
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
+    const voiceBtn = document.getElementById('voice-btn');
+    const voiceStatus = document.getElementById('voice-status');
+    const clearChatBtn = document.getElementById('clear-chat');
+    
+    // Handle form submission
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const message = chatInput.value.trim();
         if (!message) return;
         
         // Add user message
-        const userMsg = document.createElement('div');
-        userMsg.className = 'chat-message user-message';
-        userMsg.innerHTML = `<p>${message}</p>`;
-        document.getElementById('chat-messages').appendChild(userMsg);
+        addMessage('user', message);
         
         // Clear input
-        input.value = '';
+        chatInput.value = '';
         
-        // Simulate AI response
-        setTimeout(() => {
-            const aiMsg = document.createElement('div');
-            aiMsg.className = 'chat-message ai-message';
+        // Show loading indicator
+        showLoading();
+        
+        // Send request to the backend API
+        fetch('/ai_assistant', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ query: message }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Remove loading indicator
+            removeLoading();
             
-            if (message.toLowerCase().includes('nvda') || message.toLowerCase().includes('nvidia')) {
-                aiMsg.innerHTML = `
-                    <p>NVDA is currently up 3.21% due to positive news about their new AI chip. The stock is showing strong momentum with increasing volume.</p>
-                    <div style="margin-top:10px;">
-                        <button class="show-chart" data-stock="NVDA" style="margin-right:5px;">Show Chart</button>
-                        <button class="read-news" data-news="nvidia-ai">Read News</button>
-                    </div>
-                `;
-            } else if (message.toLowerCase().includes('aapl') || message.toLowerCase().includes('apple')) {
-                aiMsg.innerHTML = `
-                    <p>AAPL is up 2.45% today after announcing new AI features. The RSI is at 62, suggesting there may still be upside potential.</p>
-                    <div style="margin-top:10px;">
-                        <button class="show-chart" data-stock="AAPL" style="margin-right:5px;">Show Chart</button>
-                        <button class="read-news" data-news="apple-ai">Read News</button>
-                    </div>
-                `;
-            } else {
-                aiMsg.innerHTML = `
-                    <p>I've analyzed your query about "${message}". Based on current market data, this stock appears to be in a consolidation phase.</p>
-                    <div style="margin-top:10px;">
-                        <button class="show-chart" data-stock="MSFT" style="margin-right:5px;">Show Chart</button>
-                        <button class="read-news" data-news="market-trends">Market Trends</button>
-                    </div>
-                `;
+            if (data.error) {
+                addMessage('ai', `Error: ${data.error}`);
+                return;
             }
             
-            document.getElementById('chat-messages').appendChild(aiMsg);
+            // Process AI response
+            const responseData = data.response;
+            let aiMessage = responseData.response;
             
-            // Add event listeners to new buttons
-            aiMsg.querySelector('.show-chart').addEventListener('click', function() {
-                const stock = this.dataset.stock;
-                alert(`Showing detailed chart for ${stock}`);
-            });
+            // Add AI message to chat
+            addMessage('ai', aiMessage);
             
-            aiMsg.querySelector('.read-news').addEventListener('click', function() {
-                const news = this.dataset.news;
-                alert(`Showing news: ${news}`);
-            });
+            // Add action buttons based on tools used
+            if (responseData.tools_used && responseData.tools_used.length > 0) {
+                addActionButtons(responseData);
+            }
             
             // Scroll to bottom
-            document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
-        }, 1000);
-    }
-
-    // Simulate stock price changes
-    setInterval(() => {
-        const stocks = [
-            { id: 'aapl-card', symbol: 'AAPL', base: 189.37 },
-            { id: 'nvda-card', symbol: 'NVDA', base: 467.65 },
-            { id: 'tsla-card', symbol: 'TSLA', base: 260.54 },
-            { id: 'aapl-mover-card', symbol: 'AAPL', base: 3.78 },
-            { id: 'nvda-mover-card', symbol: 'NVDA', base: 5.32 },
-            { id: 'msft-mover-card', symbol: 'MSFT', base: 2.91 },
-            { id: 'tsla-mover-card', symbol: 'TSLA', base: -4.56 },
-            { id: 'amzn-mover-card', symbol: 'AMZN', base: -2.89 },
-            { id: 'intc-mover-card', symbol: 'INTC', base: -1.95 }
-        ];
-        
-        stocks.forEach(stock => {
-            const card = document.getElementById(stock.id);
-            if (!card) return;
+            scrollToBottom();
+        })
+        .catch(error => {
+            // Remove loading indicator
+            removeLoading();
             
-            const changeElement = card.querySelector('span');
-            if (!changeElement) return;
-            
-            const currentChange = parseFloat(changeElement.textContent);
-            const newChange = currentChange + (Math.random() - 0.5) * 0.3;
-            
-            changeElement.textContent = (newChange > 0 ? '+' : '') + newChange.toFixed(2) + '%';
-            changeElement.className = newChange >= 0 ? 'up' : 'down';
-            
-            // Flash the card to show update
-            card.style.backgroundColor = 'rgba(255,255,255,0.1)';
-            setTimeout(() => {
-                card.style.backgroundColor = 'rgba(255,255,255,0.05)';
-            }, 300);
+            // Show error message
+            addMessage('ai', 'Sorry, there was an error processing your request. Please try again.');
+            console.error('Error:', error);
         });
-    }, 3000);
+    });
+    
+    // Clear chat button
+    clearChatBtn.addEventListener('click', function() {
+        chatMessages.innerHTML = `
+            <div class="chat-message ai-message">
+                <p>Hello! I'm your AI stock assistant. How can I help you today?</p>
+            </div>
+        `;
+    });
+    
+    // Voice input button functionality
+    let recognition = null;
+    
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        
+        recognition.onstart = function() {
+            voiceStatus.style.display = 'block';
+            voiceBtn.classList.add('active');
+        };
+        
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            chatInput.value = transcript;
+        };
+        
+        recognition.onend = function() {
+            voiceStatus.style.display = 'none';
+            voiceBtn.classList.remove('active');
+        };
+        
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+            voiceStatus.style.display = 'none';
+            voiceBtn.classList.remove('active');
+        };
+        
+        voiceBtn.addEventListener('click', function() {
+            if (voiceBtn.classList.contains('active')) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+    } else {
+        voiceBtn.style.display = 'none';
+    }
+    
+    // Helper functions
+    function addMessage(type, content) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${type}-message`;
+        
+        // Format content with Markdown-like styling
+        let formattedContent = content
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')  // Italic
+            .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')  // Code blocks
+            .replace(/`([^`]+)`/g, '<code>$1</code>')  // Inline code
+            .replace(/\n/g, '<br>');  // Line breaks
+        
+        messageDiv.innerHTML = `<p>${formattedContent}</p>`;
+        chatMessages.appendChild(messageDiv);
+        scrollToBottom();
+        
+        return messageDiv;
+    }
+    
+    function addActionButtons(responseData) {
+        const lastMessage = chatMessages.lastElementChild;
+        
+        // Create buttons container if it doesn't exist
+        let buttonsContainer = lastMessage.querySelector('.action-buttons');
+        if (!buttonsContainer) {
+            buttonsContainer = document.createElement('div');
+            buttonsContainer.className = 'action-buttons';
+            lastMessage.appendChild(buttonsContainer);
+        }
+        
+        // Detect stock tickers in the response
+        const tickerRegex = /\$?([A-Z]{1,5})\b/g;
+        const tickerMatches = [...responseData.response.matchAll(tickerRegex)];
+        const tickers = tickerMatches
+            .map(match => match[1])
+            .filter(ticker => {
+                // Filter out common words that might be mistaken for tickers
+                const commonWords = ['A', 'I', 'FOR', 'AT', 'BE', 'AI', 'OR', 'IT', 'ON', 'BY'];
+                return !commonWords.includes(ticker);
+            });
+        
+        // Add chart buttons for each ticker
+        if (tickers.length > 0 || responseData.tools_used.includes('stock_data') || 
+            responseData.tools_used.includes('ticker_info')) {
+            
+            // Use detected tickers or tools_used information
+            const tickersToUse = tickers.length > 0 ? [...new Set(tickers)] : ['MSFT']; // Default if no tickers found
+            
+            tickersToUse.forEach(ticker => {
+                const chartBtn = document.createElement('button');
+                chartBtn.className = 'action-btn chart-btn';
+                chartBtn.innerHTML = `<i class="fas fa-chart-line"></i> ${ticker} Chart`;
+                chartBtn.addEventListener('click', function() {
+                    window.open(`/comparison?ticker1=${ticker}`, '_blank');
+                });
+                buttonsContainer.appendChild(chartBtn);
+                
+                // Also add a news button for this ticker
+                const newsBtn = document.createElement('button');
+                newsBtn.className = 'action-btn news-btn';
+                newsBtn.innerHTML = `<i class="fas fa-newspaper"></i> ${ticker} News`;
+                newsBtn.addEventListener('click', function() {
+                    window.open(`/news?query=${ticker}`, '_blank');
+                });
+                buttonsContainer.appendChild(newsBtn);
+            });
+        }
+    }
+    
+    function showLoading() {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'loading-indicator';
+        loadingDiv.innerHTML = `
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        `;
+        loadingDiv.id = 'loading-indicator';
+        chatMessages.appendChild(loadingDiv);
+        scrollToBottom();
+    }
+    
+    function removeLoading() {
+        const loadingDiv = document.getElementById('loading-indicator');
+        if (loadingDiv) {
+            loadingDiv.remove();
+        }
+    }
+    
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
 });
