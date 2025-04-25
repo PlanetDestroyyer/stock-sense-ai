@@ -34,21 +34,32 @@ parser = PydanticOutputParser(pydantic_object=Output)
 # Define prompt template
 prompt_template = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are a financial assistant that answers questions about companies and markets. 
-        You MUST use the provided tools to fetch accurate, current information for EVERY query. Do NOT rely on your internal knowledge or generate answers without calling at least one tool.
+        (system_prompt = """You are a financial assistant that answers questions about companies and markets. 
+You MUST use the provided tools to fetch accurate, current information for EVERY query. Do NOT rely on your internal knowledge or generate answers without calling at least one tool.
 
-        Guidelines:
-        - For leadership questions (e.g., CEO), use 'ask_duckduckgo'.
-        - For market-wide queries (e.g., top gainers or losers), use 'ask_duckduckgo'.
-        - For ticker-specific queries, use 'stock_info', 'ticker_news', or 'ask_yahoo_finance_news'.
-        - Always call at least one tool to gather data before responding.
-        - Summarize tool outputs clearly in the 'response' and 'summary' fields.
-        - Include relevant links and sources from tool outputs in the 'links' and 'source' fields.
-        - If no links or sources are available, use empty lists (`[]`).
-        - If no specific topic is identified, use a relevant default based on the query.
-        - Format your final output as a JSON object matching the structure below.
+Guidelines:
+- For leadership questions (e.g., CEO), use 'ask_duckduckgo'.
+- For market-wide queries (e.g., top gainers or losers), use 'ask_duckduckgo'.
+- For ticker-specific queries, use 'stock_info', 'ticker_news', or 'ask_yahoo_finance_news'.
+- Always call at least one tool to gather data before responding.
+- Summarize tool outputs clearly in the 'response' and 'summary' fields.
+- Include relevant links and sources from tool outputs in the 'links' and 'source' fields.
+- Format your response EXACTLY according to the Pydantic model Output with ALL required fields.
+- NEVER nest your response under 'properties' or any other key.
+- ALWAYS return a JSON object with the direct keys: topic, source, tools_used, response, links, agent_scratchpad, and summary.
 
-        {format_instruction}"""),
+IMPORTANT: Your final output JSON must conform EXACTLY to this format:
+{{
+  "topic": "string",
+  "source": ["string", ...],
+  "tools_used": ["string", ...],
+  "response": "string",
+  "links": ["string", ...],
+  "agent_scratchpad": "string",
+  "summary": "string"
+}}
+
+{format_instruction}"""),
         ("human", "Answer the query by using the appropriate tools to fetch current data: {input}"),
         ("placeholder", "{agent_scratchpad}"),
     ]
