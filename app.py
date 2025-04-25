@@ -158,64 +158,6 @@ def movers():
         losers=losers.to_dict(orient='records')
     )
 
-def process_agent_output(raw_response):
-    """Process and standardize agent output regardless of format variations."""
-    try:
-        # Get the output text from the raw response
-        if isinstance(raw_response, dict) and "output" in raw_response:
-            output_text = raw_response["output"]
-        else:
-            output_text = str(raw_response)
-        
-        # Try to parse as JSON if it's a string
-        if isinstance(output_text, str):
-            try:
-                parsed = json.loads(output_text)
-            except:
-                # If not valid JSON, return a default structure
-                return Output(
-                    topic="Query Response",
-                    response="Unable to process response format",
-                    summary="Format error occurred",
-                    tools_used=[],
-                    links=[],
-                    source=[],
-                    agent_scratchpad=""
-                ).model_dump()
-        else:
-            parsed = output_text
-            
-        # Check if response is nested under 'properties'
-        if isinstance(parsed, dict) and "properties" in parsed:
-            parsed = parsed["properties"]
-            
-        # Validate against our model
-        validated = Output(
-            topic=parsed.get("topic", "No Topic Available"),
-            response=parsed.get("response", "No response available"),
-            summary=parsed.get("summary", "No summary available"),
-            tools_used=parsed.get("tools_used", []),
-            links=parsed.get("links", []),
-            source=parsed.get("source", []),
-            agent_scratchpad=parsed.get("agent_scratchpad", "")
-        )
-        
-        return validated.model_dump()
-        
-    except Exception as e:
-        # Fallback for any processing errors
-        print(f"Error processing agent output: {e}")
-        return Output(
-            topic="Error Processing",
-            response=f"Error processing response: {str(e)}",
-            summary="An error occurred",
-            tools_used=[],
-            links=[],
-            source=[],
-            agent_scratchpad=""
-        ).model_dump()
-
-
 
 
 @app.route('/ai_assistant', methods=['GET', 'POST'])
@@ -236,9 +178,31 @@ def assistant():
             # Call your AI agent
             raw_response = agent_executor.invoke({"input": query})
             logging.info(f"Raw agent response: {raw_response}")
+
+            # Process the response
+            print(f"Raw response type: {type(raw_response)}")
+            print(raw_response)
             
-            # Process response to ensure consistent format
-            response_data = process_agent_output(raw_response)
+           
+            response =  json.loads(raw_response['output'])
+
+            
+            response_data = {
+                "topic": response["topic"],
+                "response": response["response"],
+                "summary": response["summary"],
+                "tools_used": response["tools_used"],
+                "links": response["links"],
+                "source": response["source"],
+                "agent_scratchpad": response["agent_scratchpad"]
+            }
+
+            # Add debugging info in development
+            if app.debug:
+                response_data["_debug"] = {
+                    "raw_response_type": type(raw_response).__name__,
+                    "raw_response_keys": list(raw_response.keys()) if isinstance(raw_response, dict) else None
+                }
 
             return jsonify({
                 "response": response_data,
@@ -254,9 +218,6 @@ def assistant():
 
     # GET request - show empty chat interface
     return render_template("ai-assistant.html")
-
-
-
 
 @app.route('/news', methods=['GET', 'POST'])
 def news():
