@@ -20,13 +20,13 @@ ask_yahoo_finance_news = YahooFinanceNewsTool()
 os.environ["USER_AGENT"] = "StockSenseAI/1.0 (stock-sense-ai@example.com)"
 
 class Output(BaseModel):
-    topic: Optional[str] = Field(None, description="The main topic of the query")
-    source: Optional[List[str]] = Field(None, description="Sources used for the response")
-    tools_used: Optional[List[str]] = Field(None, description="List of tools used to generate the response")
+    topic: str = Field(..., description="The main topic of the query")
+    source: List[str] = Field(default_factory=list, description="Sources used for the response")
+    tools_used: List[str] = Field(default_factory=list, description="List of tools used to generate the response")
     response: str = Field(..., description="The main response text")
-    links: Optional[List[str]] = Field(None, description="Relevant links")
-    agent_scratchpad: Optional[str] = Field(None, description="Agent's working notes")
-    summary: Optional[str] = Field(None, description="Brief summary of the response")
+    links: List[str] = Field(default_factory=list, description="Relevant links")
+    agent_scratchpad: str = Field("", description="Agent's working notes")
+    summary: str = Field(..., description="Brief summary of the response")
 
 # Initialize Pydantic parser
 parser = PydanticOutputParser(pydantic_object=Output)
