@@ -20,13 +20,22 @@ body {
     position: fixed;
     width: 100%;
     height: 100vh;
-    background: white url('/static/assets/image/loading.gif') no-repeat center;
-    background-size: 300px;
-    /* Default size */
+    background-color: rgb(56, 52, 60);
     z-index: 9999;
     opacity: 1;
     transition: opacity 0.5s;
+    overflow: hidden;
 }
+
+#loading video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300px;
+    transform: translate(-50%, -50%);
+    pointer-events: none; /* So clicks pass through */
+}
+
 
 @media (max-width: 768px) {
     #loading {

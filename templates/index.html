@@ -54,10 +54,7 @@
                 flex-direction: row;
             }
 
-            .chat-price {
-            display: contents !important;
-            /* justify-content: center; */
-        }
+
         }
 
         /* Sidebar Styles */
@@ -382,6 +379,10 @@
             .dashboard-flex {
                 flex-direction: column;
             }
+            .chat-price {
+            display: contents !important;
+            /* justify-content: center; */
+        }
         }
 
         @media (max-width: 480px) {
@@ -398,9 +399,12 @@
     </style>
     {% endblock %}
 </head>
-<body onload="loding()">
+<div id="loading">
+    <video autoplay muted loop playsinline>
+        <source src="/static/assets/image/loader.webm" type="video/webm">
+    </video>
+</div>
 
-    <div id="loading"></div>
     <div class="container">
         <!-- Mobile Menu Toggle -->
         <div class="mobile-menu-toggle">
