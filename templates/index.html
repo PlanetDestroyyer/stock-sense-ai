@@ -43,10 +43,21 @@
             flex-direction: column;
         }
 
+
+        .chat-price {
+            display: grid;
+            justify-content: center;
+        }
+
         @media (min-width: 768px) {
             .container {
                 flex-direction: row;
             }
+
+            .chat-price {
+            display: contents !important;
+            /* justify-content: center; */
+        }
         }
 
         /* Sidebar Styles */
@@ -83,6 +94,7 @@
         .sidebar-header h3 {
             margin: 0;
             font-size: 1.2rem;
+            color: var(--accent-color);
         }
 
         .sidebar-nav {
@@ -386,7 +398,9 @@
     </style>
     {% endblock %}
 </head>
-<body>
+<body onload="loding()">
+
+    <div id="loading"></div>
     <div class="container">
         <!-- Mobile Menu Toggle -->
         <div class="mobile-menu-toggle">
@@ -440,15 +454,19 @@
     
     <!-- Full-width chart section -->
     <div class="card">
+
         <div class="card-header">
             <h3>Market Indices</h3>
         </div>
-        <div id="chartContainer">
-            <canvas id="stockChart"></canvas>
+        <div class="chat-price">
+            <div id="chartContainer">
+                <canvas id="stockChart"></canvas>
+            </div>
+            <div id="priceContainer">
+                <!-- Prices will be populated by JavaScript -->
+            </div>
         </div>
-        <div id="priceContainer">
-            <!-- Prices will be populated by JavaScript -->
-        </div>
+
     </div>
     
     <!-- Two-column layout below -->
@@ -647,5 +665,15 @@
             }
         });
     </script>
+      <script>
+        window.addEventListener('load', function () {
+          var preloader = document.getElementById('loading');
+          preloader.style.opacity = 0; // Start fading out the loading element
+          setTimeout(function () {
+            preloader.style.display = 'none'; // Hide the loading element after the transition
+          }, 500); // Adjust the duration to match the CSS transition duration
+          document.body.classList.add('loaded'); // Add the 'loaded' class to the body
+        });
+      </script>
 </body>
 </html>

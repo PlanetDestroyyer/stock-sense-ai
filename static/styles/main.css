@@ -13,6 +13,45 @@ body {
     min-height: 100vh;
 }
 
+
+
+
+#loading {
+    position: fixed;
+    width: 100%;
+    height: 100vh;
+    background: white url('/static/assets/image/loading.gif') no-repeat center;
+    background-size: 300px;
+    /* Default size */
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.5s;
+}
+
+@media (max-width: 768px) {
+    #loading {
+        background-size: 200px;
+        /* Smaller size for tablets */
+    }
+}
+
+@media (max-width: 480px) {
+    #loading {
+        background-size: 150px;
+        /* Even smaller size for mobile phones */
+    }
+}
+
+.loaded #loading {
+    opacity: 0;
+    display: none;
+    /* Hide the element after fading out */
+}
+
+
+
+
+
 /* Dashboard specific styles */
 .dashboard-grid {
     display: grid;
