@@ -1,60 +1,177 @@
-{% extends "index.html" %} {% block style %} {{ super() }}
-    <link rel="stylesheet" href="static/styles/main.css">
-    <link rel="stylesheet" href="static/styles/top-movers.css">
-    {% endblock %} {% block content %}
-        <!-- Main Content -->
-        <div class="main-content">
-            <h2><i class="fas fa-bolt"></i> Top Movers</h2>
-            
-            <div class="card mt-5">
-                <div class="card-header">
-                    <h3>Market Movers</h3>
+{% extends "index.html" %}
+{% block style %}
+{{ super() }}
+<link rel="stylesheet" href="/static/styles/main.css">
+<link rel="stylesheet" href="/static/styles/top-movers.css">
+<style>
+    /* Top Movers Page Specific Styles */
+    .movers-card {
+        background: var(--secondary-bg);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
 
-                </div>
-                
-                <div class="movers-container">
-                    <div class="movers-column gainers">
-                        <h4><i class="fas fa-arrow-up"></i> Top Gainers</h4>
-                        {% for stock in gainers %}
-                        <div class="stock-card">
-                          <div style="flex:1">
-                            <h4>{{ stock['Ticker'] }} <span class="up">{{ stock['Change'] }}</span></h4>
-                            <p>{{ stock['Company'] }}</p>
-                            <small>Volume: {{ stock['Volume'] }}</small>
-                          </div>
-                          <form action="{{ url_for('news') }}" method="POST">
-                            <input type="hidden" name="query" value="{{ stock['Ticker'] }}">
-                            <button class="analyze-btn" type="submit">Analyze</button>
-                          </form>
-                        </div>
-                        {% endfor %}
-                        
+    .movers-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+        .movers-container {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    .movers-column {
+        background: var(--primary-bg);
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    .movers-column h4 {
+        margin: 0 0 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .movers-column.gainers h4 {
+        color: var(--success-color);
+    }
+
+    .movers-column.losers h4 {
+        color: var(--danger-color);
+    }
+
+    .stock-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--secondary-bg);
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .stock-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .stock-info {
+        flex: 1;
+    }
+
+    .stock-card h4 {
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .stock-card p {
+        margin: 5px 0;
+        color: var(--text-secondary);
+        font-size: 0.9em;
+    }
+
+    .stock-card small {
+        color: var(--text-secondary);
+        font-size: 0.8em;
+    }
+
+    .up {
+        color: var(--success-color);
+    }
+
+    .down {
+        color: var(--danger-color);
+    }
+
+    .analyze-btn {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: all 0.3s ease;
+    }
+
+    .analyze-btn:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+        .movers-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .stock-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .analyze-btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Main Content -->
+<div class="main-content">
+    <h2><i class="fas fa-bolt"></i> Top Movers</h2>
+    
+    <div class="card movers-card">
+        <div class="card-header">
+            <h3>Market Movers</h3>
+        </div>
+        
+        <div class="movers-container">
+            <div class="movers-column gainers">
+                <h4><i class="fas fa-arrow-up"></i> Top Gainers</h4>
+                {% for stock in gainers %}
+                <div class="stock-card">
+                    <div class="stock-info">
+                        <h4>{{ stock['Ticker'] }} <span class="up">{{ stock['Change'] }}</span></h4>
+                        <p>{{ stock['Company'] }}</p>
+                        <small>Volume: {{ stock['Volume'] }}</small>
                     </div>
-                    
-                    
-                    <div class="movers-column losers">
-                        <h4><i class="fas fa-arrow-down"></i> Top Losers</h4>
-                        {% for stock in losers %}
-                        <div class="stock-card">
-                          <div style="flex:1">
-                            <h4>{{ stock['Ticker'] }} <span class="up">{{ stock['Change'] }}</span></h4>
-                            <p>{{ stock['Company'] }}</p>
-                            <small>Volume: {{ stock['Volume'] }}</small>
-                          </div>
-                          <form action="{{ url_for('news') }}" method="POST">
-                            <input type="hidden" name="query" value="{{ stock['Ticker'] }}">
-                            <button class="analyze-btn" type="submit">Analyze</button>
-                          </form>
-                        </div>
-                        {% endfor %}
-                        
-                    </div>
-                    
+                    <form action="{{ url_for('news') }}" method="POST">
+                        <input type="hidden" name="query" value="{{ stock['Ticker'] }}">
+                        <button class="analyze-btn" type="submit">Analyze</button>
+                    </form>
                 </div>
+                {% endfor %}
+            </div>
+            
+            <div class="movers-column losers">
+                <h4><i class="fas fa-arrow-down"></i> Top Losers</h4>
+                {% for stock in losers %}
+                <div class="stock-card">
+                    <div class="stock-info">
+                        <h4>{{ stock['Ticker'] }} <span class="down">{{ stock['Change'] }}</span></h4>
+                        <p>{{ stock['Company'] }}</p>
+                        <small>Volume: {{ stock['Volume'] }}</small>
+                    </div>
+                    <form action="{{ url_for('news') }}" method="POST">
+                        <input type="hidden" name="query" value="{{ stock['Ticker'] }}">
+                        <button class="analyze-btn" type="submit">Analyze</button>
+                    </form>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
+</div>
 
-    <script src="static/scripts/main.js"></script>
-    <script src="static/scripts/top-movers.js"></script>
-    {% endblock %}
+<script src="/static/scripts/main.js"></script>
+<script src="/static/scripts/top-movers.js"></script>
+{% endblock %}

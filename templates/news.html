@@ -1,7 +1,190 @@
 {% extends "index.html" %}
 {% block style %}
 {{ super() }}
-<link rel="stylesheet" href="/static/styles/ai-assistant.css">
+<link rel="stylesheet" href="/static/styles/main.css">
+<link rel="stylesheet" href="/static/styles/news.css">
+<style>
+    /* News Page Specific Styles */
+    .ticker-input-card {
+        background: var(--secondary-bg);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .ticker-input-form {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .ticker-input-form input {
+        flex: 1;
+        min-width: 200px;
+        padding: 10px 15px;
+        background: var(--primary-bg);
+        border: 1px solid var(--text-secondary);
+        border-radius: 8px;
+        color: var(--text-primary);
+    }
+
+    .ticker-input-form button {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .ticker-input-form button:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+    }
+
+    .error-message {
+        color: var(--danger-color);
+        margin-top: 10px;
+    }
+
+    .news-results-card {
+        background: var(--secondary-bg);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .news-results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .news-results-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .price-display {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: var(--accent-color);
+    }
+
+    .news-ticker {
+    background: var(--primary-bg);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.ticker-content {
+    display: flex;
+    animation: ticker 250s linear infinite;
+    white-space: nowrap;
+    padding-left: 100%; /* Start with content fully visible */
+}
+
+@keyframes ticker {
+    0% { transform: translateX(0); } /* Start from current position */
+    100% { transform: translateX(-100%); } /* Move left by full width */
+}
+
+.news-item-news {
+    margin-right: 30px;
+    color: var(--text-primary);
+    padding: 0 20px;
+    font-size: 1.1em;
+    flex-shrink: 0; /* Prevent items from shrinking */
+}
+
+    .news-highlights {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    @media (min-width: 768px) {
+        .news-highlights {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    .highlight-card {
+        background: var(--primary-bg);
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 3px solid var(--accent-color);
+        transition: all 0.3s ease;
+    }
+
+    .highlight-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .highlight-card h4 {
+        margin: 0 0 10px 0;
+        color: var(--text-primary);
+    }
+
+    .highlight-card p {
+        margin: 0 0 10px 0;
+        color: var(--text-secondary);
+    }
+
+    .highlight-card small {
+        color: var(--text-secondary);
+        font-size: 0.8em;
+    }
+
+    .read-news {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .read-news:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+    }
+
+    .no-news-card {
+        background: rgba(247, 37, 133, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 3px solid #f72585;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+        .ticker-input-form {
+            flex-direction: column;
+        }
+        
+        .ticker-input-form input,
+        .ticker-input-form button {
+            width: 100%;
+        }
+        
+        .news-results-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -10,25 +193,25 @@
     <h2><i class="fas fa-newspaper"></i> News Impact Analysis</h2>
 
     <!-- Ticker Input Form -->
-    <div class="card" style="margin-bottom: 20px;">
+    <div class="card ticker-input-card">
         <div class="card-header">
             <h3>Enter Stock Ticker</h3>
         </div>
-        <form method="POST" action="/news" style="padding: 15px;">
-            <input type="text" name="query" placeholder="Enter ticker (e.g., AAPL)" value="{{ query }}" style="padding: 8px; width: 200px; margin-right: 10px;">
-            <button type="submit" style="padding: 8px 15px; background: #4cc9f0; color: white; border: none; border-radius: 4px;">Get News & Price</button>
+        <form method="POST" action="/news" class="ticker-input-form">
+            <input type="text" name="query" placeholder="Enter ticker (e.g., AAPL)" value="{{ query }}">
+            <button type="submit">Get News & Price</button>
         </form>
         {% if error %}
-            <p style="color: red; padding: 0 15px;">{{ error }}</p>
+            <p class="error-message">{{ error }}</p>
         {% endif %}
     </div>
 
     <!-- News and Price Display -->
     {% if news or price != "N/A" %}
-    <div class="card">
-        <div class="card-header">
+    <div class="card news-results-card">
+        <div class="news-results-header">
             <h3>Latest Market News for {{ ticker }}</h3>
-            <h4>Current Price: ${{ price }}</h4>
+            <div class="price-display">Current Price: ${{ price }}</div>
         </div>
         
         <div class="news-ticker">
@@ -43,18 +226,18 @@
             </div>
         </div>
         
-        <div style="display:flex; gap:15px; margin-top:15px;">
+        <div class="news-highlights">
             {% if news %}
                 {% for item in news[:2] %}
-                    <div style="flex:1; background:rgba(76,201,240,0.1); padding:15px; border-radius:8px; border-left:3px solid #4cc9f0;">
+                    <div class="highlight-card">
                         <h4>News Update</h4>
                         <p>{{ item.Title }}</p>
                         <small>{{ item.Date }}</small>
-                        <button class="read-news" style="margin-top:10px;" data-news="{{ item.Title|lower|replace(' ', '-') }}">Read News</button>
+                        <button class="read-news" data-news="{{ item.Title|lower|replace(' ', '-') }}">Read News</button>
                     </div>
                 {% endfor %}
             {% else %}
-                <div style="flex:1; background:rgba(247,37,133,0.1); padding:15px; border-radius:8px; border-left:3px solid #f72585;">
+                <div class="highlight-card no-news-card">
                     <h4>No News Available</h4>
                     <p>No recent news found for {{ ticker }}.</p>
                     <small>Just now</small>
