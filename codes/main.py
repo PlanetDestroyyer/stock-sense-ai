@@ -63,6 +63,9 @@ Guidelines:
         ("placeholder", "{agent_scratchpad}")
     ]
 ).partial(format_instruction=parser.get_format_instructions())
+
+
+
 # Define tools with explicit descriptions
 tools = [
     Tool(
