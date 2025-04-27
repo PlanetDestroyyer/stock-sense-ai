@@ -65,8 +65,8 @@ Accessing stock market insights today requires users to visit multiple websites 
 ## 📽️ Demo & Deliverables
 
 - **Live Hosting Link:** [https://stock-sense-ai.onrender.com/](https://stock-sense-ai.onrender.com/)
-- **Demo Video Link:** [Youtube]()
-- **PPT Link:** [Drive]()
+- **Demo Video Link:** [Youtube](https://youtu.be/VNAKloNNqOw)
+- **PPT Link:** [Drive](https://docs.google.com/presentation/d/17d9-xQwEXSwTh8k482GAkZVAozEyWlrN/edit?usp=sharing&ouid=101544046366010855536&rtpof=true&sd=true)
 
 ---
 
