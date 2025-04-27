@@ -22,8 +22,8 @@ Accessing stock market insights today requires users to visit multiple websites 
 
 **Team Members:**
 - [Pranav Nalawade](https://github.com/PlanetDestroyyer) – AI Developer
-- [Sahana Durgekar]() - Backend Developer
-- [Harshita Singhal]() - Frontend Developer
+- [Sahana Durgekar](https://github.com/sahana-github) - Backend Developer
+- [Harshita Singhal](https://github.com/Harshitasinghal-create) - Frontend Developer
 
 **Our Approach:**
 - We chose this problem because financial research is complicated, especially for beginners.
@@ -65,16 +65,14 @@ Accessing stock market insights today requires users to visit multiple websites 
 ## 📽️ Demo & Deliverables
 
 - **Live Hosting Link:** [https://stock-sense-ai.onrender.com/](https://stock-sense-ai.onrender.com/)
-- **Demo Video Link:** [Paste YouTube or Loom link here]
-- **Pitch Deck / PPT Link:** [Paste Google Slides / PDF link here]
+- **Demo Video Link:** [Youtube]()
+- **PPT Link:** [Drive]()
 
 ---
 
 ## ✅ Tasks & Bonus Checklist
 
 - ✅ All team members followed the required social channels and filled the form.
-- ✅ Bonus Task 1: Shared badges and filled the form (2 points)
-- ✅ Bonus Task 2: Signed up for Sprint.dev and filled the form (3 points)
 
 ---
 
@@ -83,7 +81,7 @@ Accessing stock market insights today requires users to visit multiple websites 
 **Requirements:**
 - Python 3.10+
 - Flask
-- API key for Groq (add in `.env` file)
+- API key for Groq and NewsAPI (add in `.env` file)
 
 **Local Setup:**
 ```bash
